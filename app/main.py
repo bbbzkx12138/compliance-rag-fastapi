@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+import logging
 import re
 import time
 import uuid
@@ -14,25 +14,29 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import (
+    APP_ENV,
+    APP_LOG_JSON,
+    APP_LOG_LEVEL,
     APP_NAME,
     APP_VERSION,
     DATABASE_PATH,
     POLICIES_PATH,
     STATIC_DIR,
+    WEB_CONCURRENCY,
+    load_policies,
 )
+from app.logging_config import configure_logging
 from app.schemas import (
     ChatRequest,
     DocumentCreateRequest,
     EvaluationRequest,
 )
+from app.services.index_manager import IndexManager
 from app.services.repository import PolicyRepository
-from app.services.retrieval import RAGEngine, unique_tokens
+from app.services.retrieval import unique_tokens
 
 
-def load_policies(path: Path = POLICIES_PATH) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
-
+logger = logging.getLogger("policylens.http")
 
 def parse_content_sections(content: str) -> list[dict[str, Any]]:
     clean = re.sub(r"\r\n?", "\n", content).strip()
@@ -95,6 +99,7 @@ def summarize_document(document: dict[str, Any]) -> dict[str, Any]:
         "tags": document.get("tags", []),
         "summary": document["summary"],
         "section_count": len(document["sections"]),
+        "is_builtin": bool(document.get("is_builtin")),
     }
 
 
@@ -121,6 +126,7 @@ def build_uploaded_document(payload: DocumentCreateRequest) -> dict[str, Any]:
         "source_type": "导入文档",
         "tags": tags,
         "summary": sections[0]["text"][:100],
+        "is_builtin": False,
         "sections": sections,
     }
 
@@ -130,10 +136,20 @@ def create_app(
     database_path: Path | None = None,
     policies_path: Path | None = None,
 ) -> FastAPI:
+    configure_logging(APP_LOG_LEVEL, json_output=APP_LOG_JSON)
     resolved_database_path = Path(database_path or DATABASE_PATH)
     policies = load_policies(Path(policies_path or POLICIES_PATH))
     repository = PolicyRepository(resolved_database_path)
-    engine = RAGEngine(policies, repository.list_documents())
+    seed_result = repository.sync_builtin_documents(policies["documents"])
+    documents = repository.list_documents()
+    index_manager = IndexManager(policies, documents)
+
+    if WEB_CONCURRENCY > 1:
+        logger.warning(
+            "检测到 WEB_CONCURRENCY=%s；当前索引为进程内存索引，"
+            "建议使用单 worker 或共享索引服务",
+            WEB_CONCURRENCY,
+        )
 
     application = FastAPI(
         title=APP_NAME,
@@ -144,23 +160,48 @@ def create_app(
         openapi_url="/api/openapi.json",
     )
     application.state.repository = repository
-    application.state.rag = engine
+    application.state.index_manager = index_manager
+    application.state.seed_result = seed_result
+    application.state.schema_version = repository.schema_version()
     application.state.started_at = datetime.now(timezone.utc)
 
     @application.middleware("http")
     async def request_context(request: Request, call_next):
         request_id = str(uuid.uuid4())
+        request.state.request_id = request_id
         started_at = time.perf_counter()
-        response = await call_next(request)
-        response.headers["X-Request-Id"] = request_id
-        response.headers["X-Process-Time-Ms"] = (
-            f"{(time.perf_counter() - started_at) * 1000:.2f}"
-        )
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "same-origin"
-        if request.url.path.startswith("/api"):
-            response.headers["Cache-Control"] = "no-store"
-        return response
+        response = None
+        status_code = 500
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        finally:
+            duration_ms = (time.perf_counter() - started_at) * 1000
+            logger.info(
+                "%s %s -> %s",
+                request.method,
+                request.url.path,
+                status_code,
+                extra={
+                    "request_id": request_id,
+                    "method": request.method,
+                    "path": request.url.path,
+                    "status_code": status_code,
+                    "duration_ms": round(duration_ms, 2),
+                    "client": request.client.host if request.client else "-",
+                    "index_version": application.state.index_manager.metadata()[
+                        "index_version"
+                    ],
+                },
+            )
+            if response is not None:
+                response.headers["X-Request-Id"] = request_id
+                response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
+                response.headers["X-Content-Type-Options"] = "nosniff"
+                response.headers["Referrer-Policy"] = "same-origin"
+                if request.url.path.startswith("/api"):
+                    response.headers["Cache-Control"] = "no-store"
 
     @application.exception_handler(RequestValidationError)
     async def validation_error_handler(
@@ -179,10 +220,23 @@ def create_app(
                     "details": error.errors(),
                 },
             },
+            headers={
+                "X-Request-Id": getattr(request.state, "request_id", "-"),
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
     @application.exception_handler(HTTPException)
     async def http_error_handler(request: Request, error: HTTPException):
+        logger.warning(
+            "HTTP %s: %s",
+            error.status_code,
+            error.detail,
+            extra={
+                "request_id": getattr(request.state, "request_id", "-"),
+                "error_code": error.status_code,
+            },
+        )
         return JSONResponse(
             status_code=error.status_code,
             content={
@@ -193,10 +247,39 @@ def create_app(
                     "details": None,
                 },
             },
+            headers={
+                "X-Request-Id": getattr(request.state, "request_id", "-"),
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
-    def current_engine() -> RAGEngine:
-        return application.state.rag
+    @application.exception_handler(Exception)
+    async def unhandled_error_handler(request: Request, error: Exception):
+        logger.exception(
+            "Unhandled application error",
+            extra={
+                "request_id": getattr(request.state, "request_id", "-"),
+                "error_code": 500,
+            },
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "ok": False,
+                "error": {
+                    "code": 500,
+                    "message": "服务器处理请求时发生错误",
+                    "details": None,
+                },
+            },
+            headers={
+                "X-Request-Id": getattr(request.state, "request_id", "-"),
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
+    def current_index() -> IndexManager:
+        return application.state.index_manager
 
     def current_repository() -> PolicyRepository:
         return application.state.repository
@@ -208,9 +291,13 @@ def create_app(
             "status": "healthy",
             "app": APP_NAME,
             "version": APP_VERSION,
+            "environment": APP_ENV,
             "uptime_seconds": int(elapsed.total_seconds()),
             "storage": "sqlite",
-            "meta": current_engine().metadata(),
+            "schema_version": application.state.schema_version,
+            "seed": application.state.seed_result,
+            "database": current_repository().stats(),
+            "meta": current_index().metadata(),
         }
 
     @application.get("/api", tags=["system"])
@@ -240,7 +327,7 @@ def create_app(
         q: Annotated[str, Query(max_length=200)] = "",
         status: Annotated[str | None, Query(pattern="^(effective|expired|draft)$")] = None,
     ):
-        documents = current_engine().documents
+        documents = current_index().documents
         if status:
             documents = [item for item in documents if item["status"] == status]
         if q.strip():
@@ -266,7 +353,7 @@ def create_app(
             ]
         return {
             "ok": True,
-            "meta": current_engine().metadata(),
+            "meta": current_index().metadata(),
             "documents": [summarize_document(item) for item in documents],
         }
 
@@ -275,7 +362,7 @@ def create_app(
         document = next(
             (
                 item
-                for item in current_engine().documents
+                for item in current_index().documents
                 if item["id"] == document_id
             ),
             None,
@@ -286,7 +373,7 @@ def create_app(
 
     @application.post("/api/chat", tags=["rag"])
     async def chat(payload: ChatRequest):
-        answer_result = current_engine().answer_question(
+        answer_result = current_index().answer_question(
             payload.question,
             scope=payload.scope,
             department=payload.department,
@@ -307,47 +394,70 @@ def create_app(
                 "unseen_terms": search["unseen_terms"],
                 "candidate_count": len(search["results"]),
             },
-            "meta": current_engine().metadata(),
+            "meta": current_index().metadata(),
         }
 
     @application.post("/api/evaluate", tags=["rag"])
     async def evaluate(payload: EvaluationRequest):
         modes = list(dict.fromkeys(payload.modes))
-        results = {mode: current_engine().evaluate(mode) for mode in modes}
+        results = {mode: current_index().evaluate(mode) for mode in modes}
         return {
             "ok": True,
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "case_count": len(current_engine().evaluation_cases),
+            "case_count": current_index().metadata()["evaluation_case_count"],
             "results": results,
         }
 
     @application.post("/api/documents", status_code=201, tags=["documents"])
     async def create_document(payload: DocumentCreateRequest):
         document = build_uploaded_document(payload)
-        current_repository().save_document(document)
-        current_engine().set_uploaded_documents(
-            current_repository().list_documents()
+        current_repository().save_document(document, is_builtin=False)
+        index_status = current_index().refresh_document(
+            document, reason="document_created"
         )
         return {
             "ok": True,
             "document": document,
-            "meta": current_engine().metadata(),
+            "meta": index_status["meta"],
         }
 
     @application.delete("/api/documents/{document_id}", tags=["documents"])
     async def delete_document(document_id: str):
-        if not document_id.startswith("UPL-"):
+        existing = current_repository().get_document(document_id)
+        if existing is None:
+            raise HTTPException(status_code=404, detail="制度文档不存在")
+        if existing.get("is_builtin"):
             raise HTTPException(status_code=403, detail="内置制度文档不能通过 API 删除")
-        deleted = current_repository().delete_document(document_id)
+        deleted = current_repository().delete_uploaded_document(document_id)
         if not deleted:
             raise HTTPException(status_code=404, detail="上传文档不存在")
-        current_engine().set_uploaded_documents(
-            current_repository().list_documents()
+        index_status = current_index().remove_document(
+            document_id, reason="document_deleted"
         )
         return {
             "ok": True,
             "deleted_id": document_id,
-            "meta": current_engine().metadata(),
+            "meta": index_status["meta"],
+        }
+
+    @application.get("/api/index/status", tags=["index"])
+    async def index_status():
+        return {
+            **current_index().status(),
+            "database": current_repository().stats(),
+        }
+
+    @application.post("/api/index/rebuild", tags=["index"])
+    async def rebuild_index():
+        seed = current_repository().sync_builtin_documents(policies["documents"])
+        current_index().rebuild(
+            current_repository().list_documents(),
+            reason="manual_rebuild",
+        )
+        return {
+            **current_index().status(),
+            "seed": seed,
+            "database": current_repository().stats(),
         }
 
     @application.get("/", include_in_schema=False)

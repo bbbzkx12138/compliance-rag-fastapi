@@ -93,8 +93,11 @@ class ApiIntegrationTests(unittest.TestCase):
         status, body = self.request("GET", "/api/health")
         self.assertEqual(status, 200)
         self.assertEqual(body["status"], "healthy")
+        self.assertEqual(body["schema_version"], 2)
         self.assertEqual(body["meta"]["document_count"], 9)
         self.assertEqual(body["meta"]["chunk_count"], 36)
+        self.assertEqual(body["database"]["builtin_count"], 9)
+        self.assertEqual(body["database"]["uploaded_count"], 0)
 
     def test_chat_and_refusal(self) -> None:
         status, body = self.request(
@@ -159,6 +162,8 @@ class ApiIntegrationTests(unittest.TestCase):
         self.assertTrue(document_id.startswith("UPL-"))
         self.assertEqual(imported["meta"]["document_count"], 10)
         self.assertEqual(imported["meta"]["chunk_count"], 38)
+        self.assertEqual(imported["meta"]["index_version"], 2)
+        self.assertEqual(imported["meta"]["last_rebuild_reason"], "document_created")
 
         status, chat = self.request(
             "POST",
@@ -183,11 +188,24 @@ class ApiIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(status, 200)
         self.assertEqual(deleted["meta"]["document_count"], 9)
+        self.assertEqual(deleted["meta"]["index_version"], 3)
 
     def test_builtin_document_cannot_be_deleted(self) -> None:
         status, body = self.request("DELETE", "/api/documents/TRV-001")
         self.assertEqual(status, 403)
         self.assertFalse(body["ok"])
+
+    def test_index_status_and_manual_rebuild(self) -> None:
+        status, before = self.request("GET", "/api/index/status")
+        self.assertEqual(status, 200)
+        self.assertEqual(before["database"]["builtin_count"], 9)
+        self.assertGreaterEqual(before["meta"]["index_version"], 1)
+
+        status, rebuilt = self.request("POST", "/api/index/rebuild")
+        self.assertEqual(status, 200)
+        self.assertEqual(rebuilt["meta"]["document_count"], 9)
+        self.assertEqual(rebuilt["meta"]["last_rebuild_reason"], "manual_rebuild")
+        self.assertEqual(rebuilt["meta"]["index_version"], before["meta"]["index_version"] + 1)
 
 
 if __name__ == "__main__":
