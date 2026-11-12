@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="规镜 PolicyLens：由 FastAPI 驱动的合规与制度 RAG 助手"
+    />
+    <title>规镜 PolicyLens · FastAPI RAG</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3v8Z"></path>
+        <path d="m9 12 2 2 4-4"></path>
+      </symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24">
+        <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path>
+        <path d="M8 9h8M8 13h5"></path>
+      </symbol>
+      <symbol id="i-library" viewBox="0 0 24 24">
+        <path d="m16 6 4 14M12 6v14M8 8v12M4 4v16"></path>
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24">
+        <path d="M3 3v18h18M7 16v-3M12 16V8M17 16v-5"></path>
+      </symbol>
+      <symbol id="i-panel" viewBox="0 0 24 24">
+        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+        <path d="M15 4v16"></path>
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="m20 20-4-4"></path>
+      </symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path>
+        <path d="M14 2v6h6M8 13h8M8 17h5"></path>
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5l3 2"></path>
+      </symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <path d="m17 8-5-5-5 5M12 3v12"></path>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="m18 15-6-6-6 6"></path>
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24">
+        <path d="m9 18 6-6-6-6"></path>
+      </symbol>
+      <symbol id="i-external" viewBox="0 0 24 24">
+        <path d="M15 3h6v6M10 14 21 3"></path>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="4" y="10" width="16" height="11" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+      </symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24">
+        <path d="M4 6h16M7 12h10M10 18h4"></path>
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M10.3 3.7 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z"></path>
+        <path d="M12 9v4M12 17h.01"></path>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="m8 12 3 3 5-6"></path>
+      </symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path d="M20 11a8 8 0 1 0-2.3 5.7"></path>
+        <path d="M20 4v7h-7"></path>
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M18 6 6 18M6 6l12 12"></path>
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14"></path>
+      </symbol>
+    </svg>
+
+    <div class="app">
+      <header class="topbar">
+        <button class="brand" type="button" id="brandButton" aria-label="返回制度助手">
+          <span class="brand-icon"><svg><use href="#i-shield"></use></svg></span>
+          <span class="brand-text">
+            <strong>规镜</strong>
+            <small>POLICYLENS · FASTAPI</small>
+          </span>
+        </button>
+
+        <nav class="nav" aria-label="主导航">
+          <button class="nav-button is-active" type="button" data-view="assistant">
+            <svg><use href="#i-chat"></use></svg><span>制度助手</span>
+          </button>
+          <button class="nav-button" type="button" data-view="knowledge">
+            <svg><use href="#i-library"></use></svg><span>知识库</span>
+          </button>
+          <button class="nav-button" type="button" data-view="evaluation">
+            <svg><use href="#i-chart"></use></svg><span>检索评测</span>
+          </button>
+        </nav>
+
+        <div class="top-actions">
+          <span class="service-status is-checking" id="serviceStatus">
+            <i></i><span id="serviceStatusText">检查 FastAPI</span>
+          </span>
+          <a class="icon-button docs-link" href="/api/docs" target="_blank" title="Swagger API 文档">
+            <svg><use href="#i-external"></use></svg>
+          </a>
+          <button class="icon-button mobile-only" id="libraryToggle" type="button" aria-label="打开知识库">
+            <svg><use href="#i-library"></use></svg>
+          </button>
+          <button class="icon-button" id="evidenceToggle" type="button" aria-label="打开证据台">
+            <svg><use href="#i-panel"></use></svg>
+          </button>
+          <button class="button secondary upload-trigger" type="button">
+            <svg><use href="#i-upload"></use></svg><span>导入制度</span>
+          </button>
+        </div>
+      </header>
+
+      <aside class="library" id="libraryPanel" aria-label="制度知识库">
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">企业制度库</p>
+            <h2>星河科技</h2>
+          </div>
+          <button class="icon-button compact" id="closeLibrary" type="button">
+            <svg><use href="#i-close"></use></svg>
+          </button>
+        </div>
+        <label class="searchbox">
+          <svg><use href="#i-search"></use></svg>
+          <input id="docSearch" type="search" placeholder="搜索制度或主题" />
+        </label>
+        <div class="filter-row">
+          <select id="departmentFilter" aria-label="部门过滤">
+            <option value="all">全部部门</option>
+          </select>
+          <span id="documentCount">正在加载</span>
+        </div>
+        <div class="doc-list" id="documentList"></div>
+        <div class="library-foot">
+          <div class="backend-note">
+            <span><svg><use href="#i-lock"></use></svg></span>
+            <div>
+              <strong>Python 服务端检索</strong>
+              <small id="backendMeta">等待 API 连接</small>
+            </div>
+          </div>
+          <p>演示制度为虚构数据，不构成正式法律意见。</p>
+        </div>
+        <button class="backdrop" id="libraryBackdrop" type="button"></button>
+      </aside>
+
+      <main class="workspace">
+        <section class="view is-active" id="assistantView" data-view-panel="assistant">
+          <header class="workspace-head">
+            <div>
+              <p class="eyebrow">FASTAPI RAG / 可追溯问答</p>
+              <h1>合规与制度助手</h1>
+              <p>检索、证据判定与版本过滤全部由 Python 后端执行。</p>
+            </div>
+            <div class="scope-switch" role="group" aria-label="版本范围">
+              <button class="is-active" type="button" data-scope="current">现行制度</button>
+              <button type="button" data-scope="all">历史版本</button>
+            </div>
+          </header>
+          <div class="status-strip">
+            <span><i></i><b id="scopeLabel">仅检索现行有效制度</b></span>
+            <span><svg><use href="#i-lock"></use></svg>答案限定在授权知识库内</span>
+            <button type="button" id="openTrace">检索轨迹 <svg><use href="#i-chevron"></use></svg></button>
+          </div>
+
+          <div class="conversation" id="conversation" aria-live="polite">
+            <div class="welcome" id="welcome">
+              <span class="welcome-icon"><svg><use href="#i-shield"></use></svg></span>
+              <p class="eyebrow">EVIDENCE FIRST</p>
+              <h2>问制度，也给依据。</h2>
+              <p class="welcome-copy">
+                FastAPI 服务会检索现行制度、核对适用范围，并返回可定位的条款引用。
+              </p>
+              <div class="suggestions">
+                <button type="button" data-question="上海出差普通员工住宿每晚上限是多少？">
+                  <span>01</span><div><strong>差旅标准</strong><small>住宿上限是多少？</small></div><svg><use href="#i-chevron"></use></svg>
+                </button>
+                <button type="button" data-question="客户送2000元购物卡可以收吗？">
+                  <span>02</span><div><strong>礼品合规</strong><small>购物卡能否收受？</small></div><svg><use href="#i-chevron"></use></svg>
+                </button>
+                <button type="button" data-question="把个人信息传到境外需要哪些审批？">
+                  <span>03</span><div><strong>数据出境</strong><small>跨境传输审批流程</small></div><svg><use href="#i-chevron"></use></svg>
+                </button>
+                <button type="button" data-question="差旅新规相比旧规，住宿标准有什么变化？">
+                  <span>04</span><div><strong>版本对比</strong><small>现行与历史条款差异</small></div><svg><use href="#i-chevron"></use></svg>
+                </button>
+              </div>
+              <div class="coverage">
+                <div><strong id="welcomeDocs">9</strong><span>制度文件</span></div>
+                <div><strong id="welcomeChunks">36</strong><span>条款切片</span></div>
+                <div><strong>8</strong><span>合规主题</span></div>
+                <div><strong id="welcomeCases">12</strong><span>评测问题</span></div>
+              </div>
+            </div>
+          </div>
+
+          <form class="composer" id="questionForm">
+            <div class="composer-top">
+              <span class="context-chip"><svg><use href="#i-filter"></use></svg><span id="contextLabel">全部部门 · 现行制度</span></span>
+              <small>检索结果附带版本与条款位置</small>
+            </div>
+            <div class="composer-row">
+              <textarea id="questionInput" rows="1" placeholder="例如：发现疑似数据泄露后多久要报告？"></textarea>
+              <button class="send" id="sendButton" type="submit" aria-label="发送">
+                <svg><use href="#i-arrow"></use></svg>
+              </button>
+            </div>
+            <div class="composer-foot">
+              <span>Enter 发送 · Shift + Enter 换行</span>
+              <span>POST /api/chat</span>
+            </div>
+          </form>
+        </section>
+
+        <section class="view" id="knowledgeView" data-view-panel="knowledge" hidden>
+          <header class="workspace-head">
+            <div>
+              <p class="eyebrow">DOCUMENT GOVERNANCE</p>
+              <h1>制度知识库</h1>
+              <p>文档上传后写入 SQLite，并由服务端重新构建检索索引。</p>
+            </div>
+            <button class="button primary upload-trigger" type="button">
+              <svg><use href="#i-plus"></use></svg><span>导入制度</span>
+            </button>
+          </header>
+          <div class="summary">
+            <div><span>现行有效</span><strong id="effectiveDocCount">--</strong><small>份制度与规范</small></div>
+            <div><span>历史版本</span><strong id="expiredDocCount">--</strong><small>份仅供追溯</small></div>
+            <div><span>条款切片</span><strong id="chunkCount">--</strong><small>服务端索引</small></div>
+            <div><span>持久化</span><strong class="small-value">SQLite</strong><small>API 导入文档</small></div>
+          </div>
+          <div class="table-tools">
+            <label class="searchbox wide">
+              <svg><use href="#i-search"></use></svg>
+              <input id="knowledgeSearch" type="search" placeholder="搜索文档、版本或部门" />
+            </label>
+            <div class="segment" id="statusFilter">
+              <button class="is-active" type="button" data-status="all">全部</button>
+              <button type="button" data-status="effective">现行</button>
+              <button type="button" data-status="expired">历史</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>制度文件</th><th>版本</th><th>状态</th><th>责任部门</th><th>生效日期</th><th>条款</th><th></th></tr>
+              </thead>
+              <tbody id="documentTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="evaluationView" data-view-panel="evaluation" hidden>
+          <header class="workspace-head">
+            <div>
+              <p class="eyebrow">RETRIEVAL QUALITY</p>
+              <h1>检索评测</h1>
+              <p>评测由 FastAPI 执行，对比关键词、字词向量和混合检索。</p>
+            </div>
+            <button class="button primary" id="runEvaluation" type="button">
+              <svg><use href="#i-refresh"></use></svg><span>重新运行</span>
+            </button>
+          </header>
+          <div class="note">
+            <svg><use href="#i-check"></use></svg>
+            <p><strong>12 个固定问题</strong>覆盖事实检索、版本对比和无依据拒答，全部指标由 Python 服务实时计算。</p>
+          </div>
+          <div class="metrics">
+            <article>
+              <div><span>关键词检索</span><small>BM25 baseline</small></div>
+              <strong data-pass="keyword">--</strong><small>综合通过率</small>
+              <footer>Recall@3 <b data-recall="keyword">--</b> · MRR <b data-mrr="keyword">--</b></footer>
+            </article>
+            <article>
+              <div><span>字词向量</span><small>TF-IDF cosine</small></div>
+              <strong data-pass="vector">--</strong><small>综合通过率</small>
+              <footer>Recall@3 <b data-recall="vector">--</b> · MRR <b data-mrr="vector">--</b></footer>
+            </article>
+            <article class="featured">
+              <div><span>混合检索</span><small>BM25 + vector + rerank</small></div>
+              <strong data-pass="hybrid">--</strong><small>综合通过率</small>
+              <footer>Recall@3 <b data-recall="hybrid">--</b> · MRR <b data-mrr="hybrid">--</b></footer>
+            </article>
+          </div>
+          <div class="evaluation-detail">
+            <div class="detail-head">
+              <div><p class="eyebrow">TEST CASES</p><h2>混合检索诊断</h2></div>
+              <span><i></i>逐题验证</span>
+            </div>
+            <div class="eval-table">
+              <table>
+                <thead><tr><th>编号</th><th>测试问题</th><th>期望条款</th><th>证据词</th><th>耗时</th><th>结果</th></tr></thead>
+                <tbody id="evaluationTableBody">
+                  <tr><td colspan="6" class="empty">正在等待评测结果</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="evidence" id="evidencePanel" aria-label="证据台">
+        <div class="panel-title evidence-title">
+          <div><p class="eyebrow">EVIDENCE DESK</p><h2>来源与检索轨迹</h2></div>
+          <button class="icon-button compact" id="closeEvidence" type="button"><svg><use href="#i-close"></use></svg></button>
+        </div>
+        <div class="tabs">
+          <button class="is-active" type="button" data-tab="sources">引用来源</button>
+          <button type="button" data-tab="trace">检索轨迹</button>
+        </div>
+        <div class="evidence-content">
+          <div class="evidence-empty" id="evidenceEmpty">
+            <span><svg><use href="#i-file"></use></svg></span>
+            <h3>等待一次检索</h3>
+            <p>完成后展示命中条款、相关性分数和版本状态。</p>
+          </div>
+          <div class="pane is-active" id="sourcesPanel"></div>
+          <div class="pane" id="tracePanel"></div>
+        </div>
+        <footer class="evidence-foot"><svg><use href="#i-lock"></use></svg><span>访问范围：当前用户 · 全员制度</span></footer>
+        <button class="backdrop" id="evidenceBackdrop" type="button"></button>
+      </aside>
+    </div>
+
+    <dialog id="uploadDialog">
+      <form id="uploadForm">
+        <div class="dialog-head">
+          <div><p class="eyebrow">INGEST DOCUMENT</p><h2>导入制度文档</h2></div>
+          <button class="icon-button compact" type="button" data-close><svg><use href="#i-close"></use></svg></button>
+        </div>
+        <p class="dialog-copy">支持 UTF-8 的 `.txt` 或 `.md`。文件内容会发送到 FastAPI，写入 SQLite 并加入检索索引。</p>
+        <div class="form-grid">
+          <label><span>制度名称</span><input id="uploadTitle" required maxlength="120" placeholder="客户投诉处理办法" /></label>
+          <label><span>版本号</span><input id="uploadVersion" required maxlength="24" value="V1.0" /></label>
+          <label><span>责任部门</span><input id="uploadDepartment" required maxlength="80" value="合规部" /></label>
+          <label><span>生效日期</span><input id="uploadDate" type="date" required /></label>
+        </div>
+        <label class="file-drop" for="uploadFile">
+          <svg><use href="#i-upload"></use></svg>
+          <strong id="uploadFileLabel">选择 Markdown 或文本文件</strong>
+          <span>建议使用标题或“第X条”分隔条款</span>
+          <input id="uploadFile" type="file" accept=".txt,.md,text/plain,text/markdown" required />
+        </label>
+        <div class="dialog-actions">
+          <button class="button ghost" type="button" data-close>取消</button>
+          <button class="button primary" type="submit"><svg><use href="#i-upload"></use></svg><span>导入并重建索引</span></button>
+        </div>
+      </form>
+    </dialog>
+    <div class="toasts" id="toastRegion" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
