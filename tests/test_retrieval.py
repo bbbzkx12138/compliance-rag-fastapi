@@ -21,6 +21,8 @@ class RetrievalEngineTests(unittest.TestCase):
     def test_index_metadata(self) -> None:
         metadata = self.engine.metadata()
         self.assertEqual(metadata["document_count"], 9)
+        self.assertEqual(metadata["base_document_count"], 9)
+        self.assertEqual(metadata["uploaded_document_count"], 0)
         self.assertEqual(metadata["chunk_count"], 36)
         self.assertEqual(metadata["evaluation_case_count"], 12)
 

@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.env
 storage/*.sqlite3
 storage/*.sqlite3-shm
 storage/*.sqlite3-wal

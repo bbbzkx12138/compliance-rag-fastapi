@@ -1,15 +1,74 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
+from typing import Any
 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+
+def _load_dotenv(path: Path) -> None:
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key or key in os.environ:
+            continue
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        os.environ[key] = value
+
+
+_load_dotenv(PROJECT_DIR / ".env")
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _env_path(name: str, default: Path) -> Path:
+    raw = os.environ.get(name)
+    path = Path(raw) if raw else default
+    return path if path.is_absolute() else (PROJECT_DIR / path).resolve()
+
+
 STATIC_DIR = PROJECT_DIR / "static"
 DATA_DIR = PROJECT_DIR / "data"
 POLICIES_PATH = DATA_DIR / "policies.json"
-DATABASE_PATH = Path(
-    os.environ.get("POLICY_RAG_DB", PROJECT_DIR / "storage" / "policy_rag.sqlite3")
+DATABASE_PATH = _env_path(
+    "POLICY_RAG_DB", PROJECT_DIR / "storage" / "policy_rag.sqlite3"
 )
 APP_NAME = "规镜 PolicyLens"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
+APP_ENV = os.environ.get("POLICY_RAG_ENV", "development")
+APP_HOST = os.environ.get("POLICY_RAG_HOST", "127.0.0.1")
+APP_PORT = _env_int("POLICY_RAG_PORT", 8000)
+APP_API_BASE_URL = os.environ.get(
+    "POLICY_RAG_API_URL", f"http://{APP_HOST}:{APP_PORT}"
+).rstrip("/")
+APP_RELOAD = _env_bool("POLICY_RAG_RELOAD", False)
+APP_LOG_LEVEL = os.environ.get("POLICY_RAG_LOG_LEVEL", "INFO").upper()
+APP_LOG_JSON = _env_bool("POLICY_RAG_LOG_JSON", False)
+WEB_CONCURRENCY = _env_int("WEB_CONCURRENCY", 1)
+
+
+def load_policies(path: Path = POLICIES_PATH) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)

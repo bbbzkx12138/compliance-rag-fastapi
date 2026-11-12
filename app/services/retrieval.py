@@ -140,87 +140,137 @@ class RAGEngine:
     def __init__(
         self,
         policies: dict[str, Any],
-        uploaded_documents: list[dict[str, Any]] | None = None,
+        documents: list[dict[str, Any]] | None = None,
     ) -> None:
-        self.base_documents = copy.deepcopy(policies["documents"])
-        self.uploaded_documents = copy.deepcopy(uploaded_documents or [])
+        if documents is None:
+            self.documents = copy.deepcopy(policies["documents"])
+            for document in self.documents:
+                document.setdefault("is_builtin", True)
+        else:
+            self.documents = copy.deepcopy(documents)
         self.synonyms = policies.get("synonyms", {})
         self.synonym_map = _build_synonym_map(self.synonyms)
         self.evaluation_cases = policies.get("evaluation_cases", [])
         self.corpus_meta = policies.get("corpus_meta", {})
-        self.documents: list[dict[str, Any]] = []
         self.chunks: list[dict[str, Any]] = []
         self.vocabulary: set[str] = set()
         self.idf: dict[str, float] = {}
         self.average_length = 1.0
         self._build_index()
 
-    def set_uploaded_documents(self, documents: list[dict[str, Any]]) -> None:
-        self.uploaded_documents = copy.deepcopy(documents)
+    def set_documents(self, documents: list[dict[str, Any]]) -> None:
+        self.documents = copy.deepcopy(documents)
         self._build_index()
 
-    def _build_index(self) -> None:
-        self.documents = [*copy.deepcopy(self.base_documents), *self.uploaded_documents]
-        chunks: list[dict[str, Any]] = []
+    def _chunks_for_document(
+        self, document: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        document_chunks: list[dict[str, Any]] = []
+        for section_index, section in enumerate(document["sections"]):
+            searchable_text = " ".join(
+                [
+                    document["title"],
+                    document.get("short_title", ""),
+                    document.get("category", ""),
+                    " ".join(document.get("tags", [])),
+                    section["heading"],
+                    section["text"],
+                ]
+            )
+            tokens = tokenize(searchable_text)
+            document_chunks.append(
+                {
+                    "id": f"{document['id']}-{section_index + 1}",
+                    "document": document,
+                    "section": section,
+                    "section_index": section_index,
+                    "searchable_text": searchable_text,
+                    "tokens": tokens,
+                    "term_frequencies": Counter(tokens),
+                    "heading_tokens": set(unique_tokens(section["heading"])),
+                    "title_tokens": set(
+                        unique_tokens(
+                            " ".join(
+                                [
+                                    document["title"],
+                                    document.get("short_title", ""),
+                                    " ".join(document.get("tags", [])),
+                                ]
+                            )
+                        )
+                    ),
+                }
+            )
+        return document_chunks
+
+    def _recalculate_index(self) -> None:
         document_frequency: Counter[str] = Counter()
 
-        for document in self.documents:
-            for section_index, section in enumerate(document["sections"]):
-                searchable_text = " ".join(
-                    [
-                        document["title"],
-                        document.get("short_title", ""),
-                        document.get("category", ""),
-                        " ".join(document.get("tags", [])),
-                        section["heading"],
-                        section["text"],
-                    ]
-                )
-                tokens = tokenize(searchable_text)
-                term_frequencies = Counter(tokens)
-                chunks.append(
-                    {
-                        "id": f"{document['id']}-{section_index + 1}",
-                        "document": document,
-                        "section": section,
-                        "section_index": section_index,
-                        "searchable_text": searchable_text,
-                        "tokens": tokens,
-                        "term_frequencies": term_frequencies,
-                        "heading_tokens": set(unique_tokens(section["heading"])),
-                        "title_tokens": set(
-                            unique_tokens(
-                                " ".join(
-                                    [
-                                        document["title"],
-                                        document.get("short_title", ""),
-                                        " ".join(document.get("tags", [])),
-                                    ]
-                                )
-                            )
-                        ),
-                    }
-                )
-                document_frequency.update(set(tokens))
+        for chunk in self.chunks:
+            document_frequency.update(set(chunk["tokens"]))
 
-        self.chunks = chunks
         self.vocabulary = set(document_frequency)
-        total_length = sum(len(chunk["tokens"]) for chunk in chunks)
-        self.average_length = total_length / max(len(chunks), 1)
+        total_length = sum(len(chunk["tokens"]) for chunk in self.chunks)
+        self.average_length = total_length / max(len(self.chunks), 1)
         self.idf = {
             token: math.log(
-                1 + (len(chunks) - frequency + 0.5) / (frequency + 0.5)
+                1
+                + (len(self.chunks) - frequency + 0.5)
+                / (frequency + 0.5)
             )
             for token, frequency in document_frequency.items()
         }
 
-        for chunk in chunks:
+        for chunk in self.chunks:
             vector: dict[str, float] = {}
             for token, frequency in chunk["term_frequencies"].items():
                 term_frequency = frequency / max(len(chunk["tokens"]), 1)
                 vector[token] = term_frequency * self.idf.get(token, 0.0)
             chunk["vector"] = vector
             chunk["vector_norm"] = _vector_norm(vector)
+
+    def _build_index(self) -> None:
+        self.chunks = [
+            chunk
+            for document in self.documents
+            for chunk in self._chunks_for_document(document)
+        ]
+        self._recalculate_index()
+
+    def rebuild(self, documents: list[dict[str, Any]] | None = None) -> None:
+        if documents is not None:
+            self.documents = copy.deepcopy(documents)
+        self._build_index()
+
+    def refresh_document(self, document: dict[str, Any]) -> None:
+        document_copy = copy.deepcopy(document)
+        document_id = document_copy["id"]
+        self.documents = [
+            item for item in self.documents if item["id"] != document_id
+        ]
+        self.documents.append(document_copy)
+        self.chunks = [
+            chunk
+            for chunk in self.chunks
+            if chunk["document"]["id"] != document_id
+        ]
+        self.chunks.extend(self._chunks_for_document(document_copy))
+        self._recalculate_index()
+
+    def remove_document(self, document_id: str) -> bool:
+        previous_count = len(self.documents)
+        self.documents = [
+            item for item in self.documents if item["id"] != document_id
+        ]
+        self.chunks = [
+            chunk
+            for chunk in self.chunks
+            if chunk["document"]["id"] != document_id
+        ]
+        if len(self.documents) == previous_count:
+            return False
+        self._recalculate_index()
+        return True
 
     def _expand_query(self, query: str) -> dict[str, Any]:
         cleaned = query
@@ -735,8 +785,12 @@ class RAGEngine:
         return {
             "corpus_name": self.corpus_meta.get("name", "PolicyLens"),
             "document_count": len(self.documents),
-            "base_document_count": len(self.base_documents),
-            "uploaded_document_count": len(self.uploaded_documents),
+            "base_document_count": sum(
+                1 for document in self.documents if document.get("is_builtin")
+            ),
+            "uploaded_document_count": sum(
+                1 for document in self.documents if not document.get("is_builtin")
+            ),
             "chunk_count": len(self.chunks),
             "evaluation_case_count": len(self.evaluation_cases),
         }
