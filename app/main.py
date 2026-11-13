@@ -30,6 +30,8 @@ from app.config import (
     RERANK_ENABLED,
     RERANK_MAX_LENGTH,
     RERANK_MODEL_PATH,
+    LLM_REPAIR_RETRIES,
+    LLM_EVIDENCE_LIMIT,
     STATIC_DIR,
     TORCH_THREADS,
     WEB_CONCURRENCY,
@@ -42,6 +44,8 @@ from app.schemas import (
     EvaluationRequest,
 )
 from app.services.index_manager import IndexManager
+from app.services.generation import RAGGenerationService
+from app.services.llm import OpenAICompatibleProvider, create_llm_provider
 from app.services.repository import PolicyRepository
 from app.services.retrieval import unique_tokens
 from app.services.semantic import SemanticModelRuntime
@@ -146,6 +150,7 @@ def create_app(
     *,
     database_path: Path | None = None,
     policies_path: Path | None = None,
+    llm_provider: OpenAICompatibleProvider | None = None,
 ) -> FastAPI:
     configure_logging(APP_LOG_LEVEL, json_output=APP_LOG_JSON)
     resolved_database_path = Path(database_path or DATABASE_PATH)
@@ -176,6 +181,15 @@ def create_app(
     )
     if semantic_runtime is not None and RERANK_ENABLED:
         semantic_runtime.warmup_reranker()
+    resolved_llm_provider = (
+        llm_provider if llm_provider is not None else create_llm_provider()
+    )
+    generation_service = RAGGenerationService(
+        index_manager,
+        resolved_llm_provider,
+        repair_retries=LLM_REPAIR_RETRIES,
+        evidence_limit=LLM_EVIDENCE_LIMIT,
+    )
 
     if WEB_CONCURRENCY > 1:
         logger.warning(
@@ -196,6 +210,8 @@ def create_app(
     application.state.index_manager = index_manager
     application.state.seed_result = seed_result
     application.state.semantic_runtime = semantic_runtime
+    application.state.llm_provider = resolved_llm_provider
+    application.state.generation_service = generation_service
     application.state.schema_version = repository.schema_version()
     application.state.started_at = datetime.now(timezone.utc)
 
@@ -337,6 +353,7 @@ def create_app(
                 if semantic_runtime is not None
                 else {"enabled": False}
             ),
+            "generation": generation_service.status(),
         }
 
     @application.get("/api", tags=["system"])
@@ -357,6 +374,7 @@ def create_app(
                 "index_status": "GET /api/index/status",
                 "index_rebuild": "POST /api/index/rebuild",
                 "model_status": "GET /api/models/status",
+                "generation_status": "GET /api/generation/status",
             },
         }
 
@@ -414,19 +432,21 @@ def create_app(
         return {"ok": True, "document": document}
 
     @application.post("/api/chat", tags=["rag"])
-    async def chat(payload: ChatRequest):
-        answer_result = current_index().answer_question(
+    async def chat(payload: ChatRequest, request: Request):
+        generation_result = await generation_service.generate(
             payload.question,
             scope=payload.scope,
             department=payload.department,
             mode=payload.mode,
-            limit=6,
+            trace_id=request.state.request_id,
         )
+        answer_result = generation_result
         search = answer_result["search"]
         return {
             "ok": True,
             "question": payload.question,
             "answer": answer_result["answer"],
+            "generation": generation_result["generation"],
             "retrieval": {
                 "mode": search["mode"],
                 "scope": search["scope"],
@@ -509,6 +529,13 @@ def create_app(
             "enabled": True,
             "models": semantic_runtime.status(),
             "meta": current_index().metadata(),
+        }
+
+    @application.get("/api/generation/status", tags=["generation"])
+    async def generation_status():
+        return {
+            "ok": True,
+            **generation_service.status(),
         }
 
     @application.post("/api/index/rebuild", tags=["index"])

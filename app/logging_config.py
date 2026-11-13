@@ -24,6 +24,12 @@ class JsonLogFormatter(logging.Formatter):
             "client",
             "index_version",
             "error_code",
+            "generation_mode",
+            "model",
+            "prompt_tokens",
+            "completion_tokens",
+            "total_tokens",
+            "estimated_cost",
         ):
             value = getattr(record, key, None)
             if value is not None:

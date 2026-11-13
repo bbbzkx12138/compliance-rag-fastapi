@@ -57,7 +57,7 @@ DATABASE_PATH = _env_path(
     "POLICY_RAG_DB", PROJECT_DIR / "storage" / "policy_rag.sqlite3"
 )
 APP_NAME = "规镜 PolicyLens"
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 APP_ENV = os.environ.get("POLICY_RAG_ENV", "development")
 APP_HOST = os.environ.get("POLICY_RAG_HOST", "127.0.0.1")
 APP_PORT = _env_int("POLICY_RAG_PORT", 8000)
@@ -87,6 +87,25 @@ RERANK_MODEL_PATH = _env_path(
 )
 RERANK_CANDIDATES = _env_int("POLICY_RAG_RERANK_CANDIDATES", 20)
 RERANK_MAX_LENGTH = _env_int("POLICY_RAG_RERANK_MAX_LENGTH", 256)
+LLM_PROVIDER = os.environ.get("POLICY_RAG_LLM_PROVIDER", "none").strip().lower()
+LLM_MODEL = os.environ.get("POLICY_RAG_LLM_MODEL", "").strip()
+LLM_BASE_URL = os.environ.get("POLICY_RAG_LLM_BASE_URL", "").strip().rstrip("/")
+LLM_API_KEY = os.environ.get("POLICY_RAG_LLM_API_KEY", "").strip()
+LLM_TIMEOUT_SECONDS = _env_int("POLICY_RAG_LLM_TIMEOUT_SECONDS", 90)
+LLM_MAX_RETRIES = _env_int("POLICY_RAG_LLM_MAX_RETRIES", 2)
+LLM_REPAIR_RETRIES = _env_int("POLICY_RAG_LLM_REPAIR_RETRIES", 1)
+LLM_TEMPERATURE = float(os.environ.get("POLICY_RAG_LLM_TEMPERATURE", "0"))
+LLM_MAX_TOKENS = _env_int("POLICY_RAG_LLM_MAX_TOKENS", 700)
+LLM_EVIDENCE_LIMIT = _env_int("POLICY_RAG_LLM_EVIDENCE_LIMIT", 4)
+LLM_ENABLE_THINKING = _env_bool("POLICY_RAG_LLM_ENABLE_THINKING", False)
+LLM_JSON_MODE = _env_bool("POLICY_RAG_LLM_JSON_MODE", True)
+LLM_INPUT_COST_PER_MILLION = float(
+    os.environ.get("POLICY_RAG_LLM_INPUT_COST_PER_MILLION", "0")
+)
+LLM_OUTPUT_COST_PER_MILLION = float(
+    os.environ.get("POLICY_RAG_LLM_OUTPUT_COST_PER_MILLION", "0")
+)
+LLM_COST_CURRENCY = os.environ.get("POLICY_RAG_LLM_COST_CURRENCY", "CNY")
 
 
 def load_policies(path: Path = POLICIES_PATH) -> dict[str, Any]:

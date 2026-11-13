@@ -15,6 +15,7 @@
 - jieba
 - BGE-small-zh-v1.5
 - BGE Reranker Base
+- OpenAI-compatible LLM Provider
 - 原生 HTML / CSS / JavaScript
 
 项目使用本地 BGE 模型生成语义向量和 Cross-Encoder 重排结果，不调用外部大模型或 Embedding API。当前生成层仍使用可验证的抽取式回答。
@@ -35,6 +36,8 @@
 - 索引版本管理、单文档刷新、全量重建和维护 CLI。
 - JSON 日志、请求 ID、耗时和服务端统一错误响应。
 - 模型状态、显存/模型体积、检索延迟和本地成本统计。
+- 通义千问 / OpenAI / Ollama 结构化 RAG 生成。
+- LLM 引用校验、二次证据检查、超时重试和自动降级。
 - Swagger 文档：`/api/docs`。
 - Windows 一键启动脚本。
 
@@ -67,6 +70,79 @@
 | BM25 + BGE + Reranker | 54/54 | 100% | 100% | 100% | 约 1.04 秒 |
 
 模型体积约 1.15 GB，当前使用 CPU，显存占用为 0，单次检索 API 成本为 0 元。
+
+## LLM 生成层
+
+当前支持三个 OpenAI-compatible Provider：
+
+| Provider | 默认模型 | 默认地址 | API Key |
+|---|---|---|---|
+| `qwen` | `qwen-plus` | DashScope compatible mode | `DASHSCOPE_API_KEY` |
+| `openai` | `gpt-4.1-mini` | `https://api.openai.com/v1` | `OPENAI_API_KEY` |
+| `local` | `qwen2.5:7b` | `http://127.0.0.1:11434/v1` | 不需要 |
+
+设置 `.env`：
+
+```text
+POLICY_RAG_LLM_PROVIDER=qwen
+POLICY_RAG_LLM_MODEL=qwen-plus
+POLICY_RAG_LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+POLICY_RAG_LLM_TIMEOUT_SECONDS=90
+POLICY_RAG_LLM_MAX_RETRIES=2
+POLICY_RAG_LLM_REPAIR_RETRIES=1
+POLICY_RAG_LLM_MAX_TOKENS=700
+POLICY_RAG_LLM_EVIDENCE_LIMIT=4
+POLICY_RAG_LLM_ENABLE_THINKING=false
+POLICY_RAG_LLM_INPUT_COST_PER_MILLION=0.8
+POLICY_RAG_LLM_OUTPUT_COST_PER_MILLION=2
+POLICY_RAG_LLM_COST_CURRENCY=CNY
+```
+
+API Key 只在 Python 服务端环境变量中读取，不会进入页面 JavaScript，也不会通过 API 返回。
+
+LLM 必须返回严格 JSON：
+
+```json
+{
+  "refused": false,
+  "answer": "最终回答",
+  "claims": [
+    {
+      "text": "关键结论",
+      "citations": [1, 2]
+    }
+  ],
+  "confidence": "high",
+  "refusal_reason": null
+}
+```
+
+生成后会执行：
+
+- JSON Schema 校验。
+- 引用编号范围检查。
+- 结论与引用原文词语覆盖率检查。
+- 金额、比例、时限等数字必须出现在引用原文中。
+- 总结内容整体支持度检查。
+- 检索前置拒答和生成后引用校验双重检查。
+
+Provider 超时、限流、网络错误、无效 Key、JSON 错误或引用校验失败时，自动降级到抽取式回答。连续失败 3 次后 Provider 熔断 30 秒。
+
+引用校验失败时会自动执行一次 Repair Retry：
+
+- 把具体校验错误和上一次 JSON 返回给模型。
+- 要求模型修正引用编号、补充引用或删除无依据内容。
+- Repair 仍失败才降级到抽取式回答。
+- 每次 Provider 响应都会立即累计 Token 和费用，即使后续 JSON 或引用校验失败也会记录。
+- 回答中的 `generation.citation_validation` 会说明失败类型、证据数量和相关结论。
+
+延迟优化默认值：
+
+- Qwen 请求发送 `enable_thinking=false`。
+- 只使用前 4 条高相关证据，减少 Prompt Token。
+- 单个回答最多 700 Completion Token。
+- Prompt 限制最多 3 条 claim，每条不超过 120 个汉字。
+- 超时提高到 90 秒，避免慢响应被过早判失败。
 
 ## 启动
 
@@ -125,6 +201,7 @@ python -m app.cli status
 | `GET` | `/api/documents/{id}` | 制度详情与全部条款 |
 | `POST` | `/api/chat` | 合规问答与证据检索 |
 | `POST` | `/api/evaluate` | 检索评测 |
+| `GET` | `/api/generation/status` | LLM Provider、Token、费用和降级统计 |
 | `POST` | `/api/documents` | 导入并持久化制度 |
 | `DELETE` | `/api/documents/{id}` | 删除用户导入文档 |
 | `GET` | `/api/index/status` | 数据库、索引版本与重建状态 |
@@ -178,7 +255,9 @@ compliance-rag-fastapi/
 │   ├── schemas.py              # Pydantic 请求模型
 │   └── services/
 │       ├── chunking.py         # 长条款与表格感知切片
+│       ├── generation.py       # LLM RAG 编排、引用校验与降级
 │       ├── index_manager.py    # 索引锁、版本与增量刷新
+│       ├── llm.py              # OpenAI/Qwen/Ollama Provider 与 Prompt
 │       ├── semantic.py         # BGE 向量与 Cross-Encoder
 │       ├── retrieval.py        # BM25、向量、回答与评测
 │       └── repository.py       # SQLite 数据源、迁移和种子同步
@@ -215,15 +294,18 @@ Browser
   → sqlite-vec 向量近邻检索
   → Cross-Encoder 重排
   → 字段加权与证据阈值判定
-  → 条款引用或拒答
+  → 检索层前置拒答
+  → LLM 严格 JSON 生成
+  → 引用存在性与原文支持校验
+  → 生成层拒答或抽取式降级
   → JSON 返回浏览器
 ```
 
 ## 当前边界
 
-- 当前生成层是抽取式回答，不调用 LLM。
+- 当前 `.env` 配置为 `qwen3.8-max`；启用 `LLM_REPAIR_RETRIES=1` 后，引用错误会先尝试修复再决定是否降级。
 - 当前 SQLite + sqlite-vec 用于单机部署；更大规模可迁移 PostgreSQL / pgvector。
 - 索引仍在单个 Python 进程内，禁止直接使用多 worker 部署。
 - 尚未实现登录、RBAC、文档级 ACL、限流与审计日志。
 
-这些边界可以在后续升级为 LLM 引用生成、共享向量索引和企业身份认证。
+这些边界可以在后续升级为共享向量索引、多租户和企业身份认证。

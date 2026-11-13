@@ -605,10 +605,10 @@
         <ol class="answer-points">
           ${answer.points
             .map(
-              (point, index) => `
+              (point) => `
                 <li class="answer-point ${point.status === "expired" ? "expired" : ""}">
                   <p>${escapeHtml(point.text)}<button class="citation" type="button"
-                    data-citation-index="${index}">${point.citation}</button></p>
+                    data-citation-index="${point.citation - 1}">${point.citation}</button></p>
                 </li>
               `
             )
@@ -623,6 +623,15 @@
         uniqueDocs.push(result.document);
       }
     });
+    const generation = answer.generation || {};
+    const generationLabel =
+      generation.mode === "llm"
+        ? `${generation.model || "LLM"} 生成`
+        : generation.mode === "fallback"
+          ? "LLM 失败 · 抽取式降级"
+          : "抽取式回答";
+    const displayLatency =
+      Number(generation.elapsed_ms || answer.trace.elapsed_ms || 0);
 
     block.innerHTML = `
       <div class="answer-row">
@@ -631,7 +640,7 @@
           <div class="answer-meta">
             <strong>规镜助手</strong>
             <span class="badge ${badgeClass}">${badgeText}</span>
-            <small>${now} · ${modeLabels[answer.trace.mode]} · ${answer.trace.elapsed_ms.toFixed(1)} ms</small>
+            <small>${now} · ${modeLabels[answer.trace.mode]} · ${escapeHtml(generationLabel)} · 总耗时 ${displayLatency.toFixed(1)} ms</small>
           </div>
           ${content}
           ${
@@ -730,7 +739,27 @@
       return;
     }
     const trace = state.lastAnswer.trace;
+    const generation = state.lastAnswer.generation || {};
     elements.tracePanel.innerHTML = `
+      <section class="trace-section">
+        <h3>生成层</h3>
+        <div class="trace-grid">
+          <div class="trace-cell"><span>模式</span><strong>${escapeHtml(generation.mode || "extractive")}</strong></div>
+          <div class="trace-cell"><span>模型</span><strong>${escapeHtml(generation.model || "extractive")}</strong></div>
+          <div class="trace-cell"><span>Token</span><strong>${generation.total_tokens || 0}</strong></div>
+          <div class="trace-cell"><span>估算费用</span><strong>${Number(generation.estimated_cost || 0).toFixed(6)} ${escapeHtml(generation.cost_currency || "")}</strong></div>
+        </div>
+        ${
+          generation.fallback_reason
+            ? `<p class="trace-note" style="margin-top:8px">降级原因：${escapeHtml(generation.fallback_reason)}</p>`
+            : ""
+        }
+        ${
+          generation.citation_validation?.status === "failed"
+            ? `<p class="trace-note" style="margin-top:8px">引用校验：${escapeHtml(generation.citation_validation.code || "")} · ${escapeHtml(generation.citation_validation.message || "")}</p>`
+            : ""
+        }
+      </section>
       <section class="trace-section">
         <h3>服务端查询</h3>
         <div class="trace-grid">

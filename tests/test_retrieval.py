@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
+os.environ["POLICY_RAG_LLM_PROVIDER"] = "none"
 
 from app.config import POLICIES_PATH, load_policies
 from app.services.retrieval import RAGEngine
@@ -56,6 +57,15 @@ class RetrievalEngineTests(unittest.TestCase):
                 for point in result["answer"]["points"]
             )
         )
+
+    def test_citation_numbers_match_evidence_indexes(self) -> None:
+        result = self.engine.answer_question(
+            "客户送2000元购物卡可以收吗？", scope="current"
+        )
+        answer = result["answer"]
+        for point in answer["points"]:
+            evidence = answer["evidence"][point["citation"] - 1]
+            self.assertEqual(point["doc_id"], evidence["document"]["id"])
 
     def test_unsupported_question_is_refused(self) -> None:
         result = self.engine.answer_question(

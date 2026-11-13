@@ -13,6 +13,7 @@ from pathlib import Path
 import uvicorn
 
 os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
+os.environ["POLICY_RAG_LLM_PROVIDER"] = "none"
 
 from app.main import create_app
 

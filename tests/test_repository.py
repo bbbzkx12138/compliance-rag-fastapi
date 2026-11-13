@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
+os.environ["POLICY_RAG_LLM_PROVIDER"] = "none"
 
 from app.services.index_manager import IndexManager
 from app.services.repository import PolicyRepository

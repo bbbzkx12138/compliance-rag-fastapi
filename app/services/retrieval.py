@@ -930,6 +930,14 @@ class RAGEngine:
                 used_sentences.add(candidate["sentence"])
                 document = result["document"]
                 section = result["section"]
+                citation_index = next(
+                    (
+                        index + 1
+                        for index, evidence_result in enumerate(top_results)
+                        if evidence_result is result
+                    ),
+                    len(points) + 1,
+                )
                 points.append(
                     {
                         "text": candidate["sentence"],
@@ -939,7 +947,7 @@ class RAGEngine:
                         "section": section["heading"],
                         "page": section["page"],
                         "status": document["status"],
-                        "citation": len(points) + 1,
+                        "citation": citation_index,
                     }
                 )
 
