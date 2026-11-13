@@ -11,22 +11,30 @@
 - Uvicorn
 - Pydantic v2
 - SQLite
+- sqlite-vec
+- jieba
+- BGE-small-zh-v1.5
+- BGE Reranker Base
 - 原生 HTML / CSS / JavaScript
 
-项目没有调用外部大模型或 Embedding API。当前生成层使用可验证的抽取式回答，确保离线运行时每条结论都来自制度原文。
+项目使用本地 BGE 模型生成语义向量和 Cross-Encoder 重排结果，不调用外部大模型或 Embedding API。当前生成层仍使用可验证的抽取式回答。
 
 ## 功能
 
-- BM25、字词 TF-IDF 向量和字段重排的混合检索。
+- jieba 中文分词、领域词典和规则查询改写。
+- BM25、BGE 语义向量、TF-IDF 特征和 Cross-Encoder 混合检索。
+- 向量持久化到 SQLite `sqlite-vec` 虚拟索引。
+- 单文档嵌入缓存和跨查询 Cross-Encoder 重排缓存。
 - 现行制度与历史版本过滤。
 - 部门元数据过滤。
 - 条款、页码、制度和版本级引用。
 - 证据不足时的明确拒答。
-- 12 题固定评测集，对比三种检索模式。
+- 54 题固定评测集，其中包含 10 个无依据负例。
 - Markdown / TXT 文档导入。
 - SQLite 唯一数据源、基础制度幂等同步和自动迁移。
 - 索引版本管理、单文档刷新、全量重建和维护 CLI。
 - JSON 日志、请求 ID、耗时和服务端统一错误响应。
+- 模型状态、显存/模型体积、检索延迟和本地成本统计。
 - Swagger 文档：`/api/docs`。
 - Windows 一键启动脚本。
 
@@ -42,11 +50,30 @@
 - 新增或删除文档时只重新切分目标文档，再重算 IDF 和向量。
 - 全量重建通过 `/api/index/rebuild` 或维护脚本执行。
 
+## 检索质量升级
+
+- `bge-small-zh-v1.5` 生成 512 维归一化语义向量。
+- SQLite 关系表保存向量 BLOB，`sqlite-vec` 保存可检索的向量索引。
+- `bge-reranker-base` 对混合召回的前 20 个条款进行 Cross-Encoder 重排。
+- 查询改写负责处理“酒店费→住宿标准”“资料传到海外→数据出境”等表达差异。
+- 长条款按标题、句子和 Markdown 段落切片，并保留页码与条款标题。
+
+当前本地 CPU 基准：
+
+| 检索模式 | 通过 | Recall@5 | 引用准确率 | 拒答准确率 | 平均延迟 |
+|---|---:|---:|---:|---:|---:|
+| BM25 | 45/54 | 95.5% | 81.8% | 90% | 0.6 ms |
+| BGE 向量 | 45/54 | 100% | 79.5% | 100% | 110 ms |
+| BM25 + BGE + Reranker | 54/54 | 100% | 100% | 100% | 约 1.04 秒 |
+
+模型体积约 1.15 GB，当前使用 CPU，显存占用为 0，单次检索 API 成本为 0 元。
+
 ## 启动
 
 ```powershell
 cd C:\Users\Lenovo\Documents\Codex\2026-11-11\wo-x\outputs\compliance-rag-fastapi
 python -m pip install -r requirements.txt
+.\scripts\download-models.ps1
 .\scripts\start.ps1
 ```
 
@@ -150,7 +177,9 @@ compliance-rag-fastapi/
 │   ├── run.py                  # 单进程服务启动入口
 │   ├── schemas.py              # Pydantic 请求模型
 │   └── services/
+│       ├── chunking.py         # 长条款与表格感知切片
 │       ├── index_manager.py    # 索引锁、版本与增量刷新
+│       ├── semantic.py         # BGE 向量与 Cross-Encoder
 │       ├── retrieval.py        # BM25、向量、回答与评测
 │       └── repository.py       # SQLite 数据源、迁移和种子同步
 ├── data/
@@ -163,6 +192,7 @@ compliance-rag-fastapi/
 │   └── policy_rag.sqlite3      # 首次启动后自动创建
 ├── scripts/
 │   ├── start.ps1
+│   ├── download-models.ps1
 │   └── rebuild-index.ps1
 ├── tests/
 │   ├── test_retrieval.py
@@ -181,18 +211,19 @@ Browser
   → IndexManager 读锁
   → 查询清洗与同义词扩展
   → 版本 / 部门元数据过滤
-  → BM25 + TF-IDF 向量召回
-  → 字段重排与证据阈值判定
+  → BM25 + jieba + BGE 语义召回
+  → sqlite-vec 向量近邻检索
+  → Cross-Encoder 重排
+  → 字段加权与证据阈值判定
   → 条款引用或拒答
   → JSON 返回浏览器
 ```
 
 ## 当前边界
 
-- 当前向量是字词 TF-IDF，不是神经网络 Embedding。
 - 当前生成层是抽取式回答，不调用 LLM。
-- 当前 SQLite 用于单机演示，未接入 PostgreSQL / pgvector。
+- 当前 SQLite + sqlite-vec 用于单机部署；更大规模可迁移 PostgreSQL / pgvector。
 - 索引仍在单个 Python 进程内，禁止直接使用多 worker 部署。
 - 尚未实现登录、RBAC、文档级 ACL、限流与审计日志。
 
-这些边界可以在后续升级为 BGE Embedding、Cross-Encoder 重排、LLM 引用生成和企业身份认证。
+这些边界可以在后续升级为 LLM 引用生成、共享向量索引和企业身份认证。

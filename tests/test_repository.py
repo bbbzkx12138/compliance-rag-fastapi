@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
+import struct
 import tempfile
 import unittest
 from pathlib import Path
+
+os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
 
 from app.services.index_manager import IndexManager
 from app.services.repository import PolicyRepository
@@ -153,7 +157,7 @@ class RepositoryTests(unittest.TestCase):
             stats = repository.stats()
             preserved = repository.get_document("UPL-TEST-001")
 
-            self.assertEqual(stats["schema_version"], 2)
+            self.assertEqual(stats["schema_version"], 3)
             self.assertEqual(stats["builtin_count"], 9)
             self.assertEqual(stats["uploaded_count"], 1)
             self.assertEqual(stats["document_count"], 10)
@@ -173,6 +177,61 @@ class RepositoryTests(unittest.TestCase):
             self.assertIsNotNone(restarted.get_document("UPL-TEST-001"))
             self.assertTrue(restarted.delete_uploaded_document("UPL-TEST-001"))
             self.assertEqual(restarted.stats()["document_count"], 9)
+
+    def test_embedding_persistence_and_cascade_delete(self) -> None:
+        policies = load_test_policies()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "vectors.sqlite3"
+            repository = PolicyRepository(database_path)
+            repository.sync_builtin_documents(policies["documents"])
+            document = uploaded_document()
+            repository.save_document(document, is_builtin=False)
+            repository.save_embeddings(
+                "test-model",
+                [
+                    {
+                        "chunk_key": "UPL-TEST-001-1-1",
+                        "document_id": document["id"],
+                        "dimensions": 4,
+                        "text_hash": "hash",
+                        "vector": b"\x00\x00\x80?\x00\x00\x00@\x00\x00@@\x00\x00\x80@",
+                    }
+                ],
+            )
+            stored = repository.load_embeddings("test-model")
+            self.assertIn("UPL-TEST-001-1-1", stored)
+            self.assertEqual(stored["UPL-TEST-001-1-1"]["dimensions"], 4)
+            self.assertTrue(repository.delete_uploaded_document(document["id"]))
+            self.assertEqual(repository.load_embeddings("test-model"), {})
+
+    def test_sqlite_vec_search(self) -> None:
+        policies = load_test_policies()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            database_path = Path(temporary_directory) / "sqlite-vec.sqlite3"
+            repository = PolicyRepository(database_path)
+            if not repository.vector_index_available:
+                self.skipTest("sqlite-vec extension is unavailable")
+            repository.sync_builtin_documents(policies["documents"])
+            vector = struct.pack("512f", *([0.0] * 511 + [1.0]))
+            repository.save_embeddings(
+                "test-512",
+                [
+                    {
+                        "chunk_key": "TRV-001-1-1",
+                        "document_id": "TRV-001",
+                        "dimensions": 512,
+                        "text_hash": "hash",
+                        "vector": vector,
+                    }
+                ],
+            )
+            hits = repository.search_similar_vectors(
+                "test-512",
+                [0.0] * 511 + [1.0],
+                limit=5,
+            )
+            self.assertIn("TRV-001-1-1", hits)
+            self.assertGreater(hits["TRV-001-1-1"], 0.99)
 
     def test_index_manager_supports_refresh_and_removal(self) -> None:
         policies = load_test_policies()

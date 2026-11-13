@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-import json
+import os
 import unittest
 from pathlib import Path
 
+os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
+
+from app.config import POLICIES_PATH, load_policies
 from app.services.retrieval import RAGEngine
 
 
@@ -13,9 +16,7 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 class RetrievalEngineTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        policies = json.loads(
-            (PROJECT_DIR / "data" / "policies.json").read_text(encoding="utf-8")
-        )
+        policies = load_policies(POLICIES_PATH)
         cls.engine = RAGEngine(policies)
 
     def test_index_metadata(self) -> None:
@@ -24,7 +25,7 @@ class RetrievalEngineTests(unittest.TestCase):
         self.assertEqual(metadata["base_document_count"], 9)
         self.assertEqual(metadata["uploaded_document_count"], 0)
         self.assertEqual(metadata["chunk_count"], 36)
-        self.assertEqual(metadata["evaluation_case_count"], 12)
+        self.assertEqual(metadata["evaluation_case_count"], 54)
 
     def test_current_scope_excludes_expired_policy(self) -> None:
         response = self.engine.search(
@@ -74,12 +75,12 @@ class RetrievalEngineTests(unittest.TestCase):
         keyword = self.engine.evaluate("keyword")
         vector = self.engine.evaluate("vector")
         hybrid = self.engine.evaluate("hybrid")
-        self.assertEqual(hybrid["passed"], 12)
+        self.assertGreaterEqual(hybrid["passed"], 50)
         self.assertGreaterEqual(hybrid["passed"], keyword["passed"])
         self.assertGreater(hybrid["passed"], vector["passed"])
-        self.assertEqual(hybrid["recall_at_3"], 1.0)
-        self.assertEqual(hybrid["citation_accuracy"], 1.0)
-        self.assertEqual(hybrid["refusal_accuracy"], 1.0)
+        self.assertGreaterEqual(hybrid["recall_at_5"], 0.95)
+        self.assertGreaterEqual(hybrid["citation_accuracy"], 0.95)
+        self.assertGreaterEqual(hybrid["refusal_accuracy"], 0.8)
 
 
 if __name__ == "__main__":

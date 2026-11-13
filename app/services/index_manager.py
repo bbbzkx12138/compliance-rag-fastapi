@@ -15,9 +15,21 @@ class IndexManager:
         self,
         policies: dict[str, Any],
         documents: list[dict[str, Any]],
+        semantic_runtime: Any | None = None,
+        vector_repository: Any | None = None,
+        rerank_enabled: bool = False,
+        rerank_candidates: int = 20,
     ) -> None:
         self._policies = policies
-        self._engine = RAGEngine(policies, documents)
+        self._semantic_runtime = semantic_runtime
+        self._engine = RAGEngine(
+            policies,
+            documents,
+            semantic_runtime=semantic_runtime,
+            vector_repository=vector_repository,
+            rerank_enabled=rerank_enabled,
+            rerank_candidates=rerank_candidates,
+        )
         self._lock = threading.RLock()
         self._version = 1
         self._built_at = datetime.now(timezone.utc).isoformat()
@@ -120,7 +132,10 @@ class IndexManager:
             return payload
 
     def status(self) -> dict[str, Any]:
-        return {
+        payload = {
             "ok": True,
             "meta": self.metadata(),
         }
+        if self._semantic_runtime is not None:
+            payload["models"] = self._semantic_runtime.status()
+        return payload

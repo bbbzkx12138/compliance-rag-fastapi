@@ -3,13 +3,19 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import struct
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    import sqlite_vec
+except ImportError:  # pragma: no cover - optional vector extension
+    sqlite_vec = None
 
-SCHEMA_VERSION = 2
+
+SCHEMA_VERSION = 3
 
 
 class PolicyRepository:
@@ -17,6 +23,7 @@ class PolicyRepository:
 
     def __init__(self, database_path: Path) -> None:
         self.database_path = Path(database_path)
+        self.vector_index_available = False
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
@@ -26,6 +33,14 @@ class PolicyRepository:
         connection.execute("PRAGMA foreign_keys = ON")
         connection.execute("PRAGMA journal_mode = WAL")
         connection.execute("PRAGMA busy_timeout = 10000")
+        if sqlite_vec is not None:
+            try:
+                connection.enable_load_extension(True)
+                sqlite_vec.load(connection)
+                connection.enable_load_extension(False)
+                self.vector_index_available = True
+            except sqlite3.Error:
+                self.vector_index_available = False
         return connection
 
     def _initialize(self) -> None:
@@ -79,6 +94,16 @@ class PolicyRepository:
 
                     """
                 )
+                if self.vector_index_available:
+                    try:
+                        connection.execute(
+                            """
+                            CREATE VIRTUAL TABLE IF NOT EXISTS vec_embeddings
+                            USING vec0(embedding float[512])
+                            """
+                        )
+                    except sqlite3.Error:
+                        self.vector_index_available = False
                 self._ensure_column(
                     connection,
                     "documents",
@@ -91,6 +116,24 @@ class PolicyRepository:
                     """
                     CREATE INDEX IF NOT EXISTS idx_documents_builtin
                     ON documents(is_builtin)
+                    """
+                )
+                connection.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS embeddings (
+                        chunk_key TEXT NOT NULL,
+                        document_id TEXT NOT NULL,
+                        model_name TEXT NOT NULL,
+                        dimensions INTEGER NOT NULL,
+                        text_hash TEXT NOT NULL,
+                        vector BLOB NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        PRIMARY KEY(chunk_key, model_name),
+                        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_embeddings_model
+                    ON embeddings(model_name);
                     """
                 )
                 connection.execute(
@@ -225,6 +268,11 @@ class PolicyRepository:
                         seeded_at,
                     ),
                 )
+                self._delete_embedding_rows(
+                    connection,
+                    "document_id = ?",
+                    (document["id"],),
+                )
                 connection.execute(
                     "DELETE FROM sections WHERE document_id = ?", (document["id"],)
                 )
@@ -308,6 +356,11 @@ class PolicyRepository:
     def delete_uploaded_document(self, document_id: str) -> bool:
         with closing(self._connect()) as connection:
             with connection:
+                self._delete_embedding_rows(
+                    connection,
+                    "document_id = ?",
+                    (document_id,),
+                )
                 cursor = connection.execute(
                     """
                     DELETE FROM documents
@@ -316,6 +369,221 @@ class PolicyRepository:
                     (document_id,),
                 )
                 return cursor.rowcount > 0
+
+    def save_embeddings(
+        self, model_name: str, records: list[dict[str, Any]]
+    ) -> None:
+        if not records:
+            return
+        now = self._now()
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.executemany(
+                    """
+                    INSERT INTO embeddings (
+                        chunk_key, document_id, model_name, dimensions,
+                        text_hash, vector, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(chunk_key, model_name) DO UPDATE SET
+                        document_id = excluded.document_id,
+                        dimensions = excluded.dimensions,
+                        text_hash = excluded.text_hash,
+                        vector = excluded.vector,
+                        updated_at = excluded.updated_at
+                    """,
+                    [
+                        (
+                            record["chunk_key"],
+                            record["document_id"],
+                            model_name,
+                            record["dimensions"],
+                            record["text_hash"],
+                            record["vector"],
+                            now,
+                        )
+                        for record in records
+                    ],
+                )
+                if self.vector_index_available:
+                    for record in records:
+                        if record["dimensions"] != 512:
+                            continue
+                        row = connection.execute(
+                            """
+                            SELECT rowid FROM embeddings
+                            WHERE chunk_key = ? AND model_name = ?
+                            """,
+                            (record["chunk_key"], model_name),
+                        ).fetchone()
+                        if row is None:
+                            continue
+                        connection.execute(
+                            "DELETE FROM vec_embeddings WHERE rowid = ?",
+                            (row["rowid"],),
+                        )
+                        # sqlite-vec accepts JSON arrays for fixed-size vectors.
+                        values = [
+                            float(item)
+                            for item in struct.unpack(
+                                f"{record['dimensions']}f", record["vector"]
+                            )
+                        ]
+                        connection.execute(
+                            """
+                            INSERT INTO vec_embeddings(rowid, embedding)
+                            VALUES (?, ?)
+                            """,
+                            (row["rowid"], json.dumps(values)),
+                        )
+
+    def load_embeddings(self, model_name: str) -> dict[str, dict[str, Any]]:
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                """
+                SELECT chunk_key, document_id, dimensions, text_hash, vector
+                FROM embeddings
+                WHERE model_name = ?
+                """,
+                (model_name,),
+            ).fetchall()
+            return {
+                row["chunk_key"]: {
+                    "document_id": row["document_id"],
+                    "dimensions": row["dimensions"],
+                    "text_hash": row["text_hash"],
+                    "vector": row["vector"],
+                }
+                for row in rows
+            }
+
+    def prune_embeddings(
+        self, model_name: str, valid_chunk_keys: set[str]
+    ) -> int:
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                "SELECT chunk_key FROM embeddings WHERE model_name = ?",
+                (model_name,),
+            ).fetchall()
+            stale = {
+                row["chunk_key"]
+                for row in rows
+                if row["chunk_key"] not in valid_chunk_keys
+            }
+            if not stale:
+                return 0
+            with connection:
+                for chunk_key in stale:
+                    self._delete_embedding_rows(
+                        connection,
+                        "chunk_key = ? AND model_name = ?",
+                        (chunk_key, model_name),
+                    )
+            return len(stale)
+
+    def search_similar_vectors(
+        self,
+        model_name: str,
+        query_vector: Any,
+        *,
+        limit: int,
+    ) -> dict[str, float]:
+        if not self.vector_index_available:
+            return {}
+        vector_values = [float(value) for value in query_vector]
+        if len(vector_values) != 512:
+            return {}
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                """
+                SELECT e.chunk_key, knn.distance
+                FROM (
+                    SELECT rowid, distance
+                    FROM vec_embeddings
+                    WHERE embedding MATCH ? AND k = ?
+                ) AS knn
+                JOIN embeddings e ON e.rowid = knn.rowid
+                WHERE e.model_name = ?
+                ORDER BY knn.distance
+                """,
+                (json.dumps(vector_values), max(1, limit), model_name),
+            ).fetchall()
+            return {
+                row["chunk_key"]: 1.0 - (float(row["distance"]) ** 2) / 2.0
+                for row in rows
+            }
+
+    def sync_vector_index(self, model_name: str) -> int:
+        if not self.vector_index_available:
+            return 0
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                """
+                SELECT rowid, dimensions, vector
+                FROM embeddings
+                WHERE model_name = ?
+                """,
+                (model_name,),
+            ).fetchall()
+            if not rows:
+                return 0
+            indexed_rows = {
+                row["rowid"]
+                for row in connection.execute(
+                    """
+                    SELECT e.rowid
+                    FROM embeddings e
+                    JOIN vec_embeddings v ON v.rowid = e.rowid
+                    WHERE e.model_name = ?
+                    """,
+                    (model_name,),
+                ).fetchall()
+            }
+            expected_rows = {row["rowid"] for row in rows}
+            if indexed_rows == expected_rows:
+                return 0
+            with connection:
+                for row in rows:
+                    values = [
+                        float(item)
+                        for item in struct.unpack(
+                            f"{row['dimensions']}f", row["vector"]
+                        )
+                    ]
+                    connection.execute(
+                        "DELETE FROM vec_embeddings WHERE rowid = ?",
+                        (row["rowid"],),
+                    )
+                    connection.execute(
+                        """
+                        INSERT INTO vec_embeddings(rowid, embedding)
+                        VALUES (?, ?)
+                        """,
+                        (row["rowid"], json.dumps(values)),
+                    )
+            return len(rows)
+
+    @staticmethod
+    def _delete_embedding_rows(
+        connection: sqlite3.Connection,
+        where_clause: str,
+        parameters: tuple[Any, ...],
+    ) -> None:
+        rows = connection.execute(
+            f"SELECT rowid FROM embeddings WHERE {where_clause}",
+            parameters,
+        ).fetchall()
+        try:
+            for row in rows:
+                connection.execute(
+                    "DELETE FROM vec_embeddings WHERE rowid = ?",
+                    (row["rowid"],),
+                )
+        except sqlite3.OperationalError:
+            pass
+        connection.execute(
+            f"DELETE FROM embeddings WHERE {where_clause}",
+            parameters,
+        )
 
     def stats(self) -> dict[str, Any]:
         with closing(self._connect()) as connection:
@@ -332,12 +600,16 @@ class PolicyRepository:
             section_count = connection.execute(
                 "SELECT COUNT(*) AS count FROM sections"
             ).fetchone()["count"]
+            embedding_count = connection.execute(
+                "SELECT COUNT(*) AS count FROM embeddings"
+            ).fetchone()["count"]
             return {
                 "schema_version": self.schema_version(),
                 "document_count": int(row["document_count"] or 0),
                 "builtin_count": int(row["builtin_count"] or 0),
                 "uploaded_count": int(row["uploaded_count"] or 0),
                 "section_count": int(section_count or 0),
+                "embedding_count": int(embedding_count or 0),
                 "last_seeded_at": row["last_seeded_at"],
             }
 

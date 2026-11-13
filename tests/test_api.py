@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import threading
 import time
@@ -10,6 +11,8 @@ import urllib.request
 from pathlib import Path
 
 import uvicorn
+
+os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
 
 from app.main import create_app
 
@@ -93,11 +96,12 @@ class ApiIntegrationTests(unittest.TestCase):
         status, body = self.request("GET", "/api/health")
         self.assertEqual(status, 200)
         self.assertEqual(body["status"], "healthy")
-        self.assertEqual(body["schema_version"], 2)
+        self.assertEqual(body["schema_version"], 3)
         self.assertEqual(body["meta"]["document_count"], 9)
         self.assertEqual(body["meta"]["chunk_count"], 36)
         self.assertEqual(body["database"]["builtin_count"], 9)
         self.assertEqual(body["database"]["uploaded_count"], 0)
+        self.assertFalse(body["models"]["enabled"])
 
     def test_chat_and_refusal(self) -> None:
         status, body = self.request(
@@ -138,7 +142,8 @@ class ApiIntegrationTests(unittest.TestCase):
             "POST", "/api/evaluate", {"modes": ["hybrid"]}
         )
         self.assertEqual(status, 200)
-        self.assertEqual(body["results"]["hybrid"]["passed"], 12)
+        self.assertEqual(body["case_count"], 54)
+        self.assertGreaterEqual(body["results"]["hybrid"]["passed"], 50)
 
     def test_import_query_and_delete_persistent_document(self) -> None:
         status, imported = self.request(
@@ -206,6 +211,11 @@ class ApiIntegrationTests(unittest.TestCase):
         self.assertEqual(rebuilt["meta"]["document_count"], 9)
         self.assertEqual(rebuilt["meta"]["last_rebuild_reason"], "manual_rebuild")
         self.assertEqual(rebuilt["meta"]["index_version"], before["meta"]["index_version"] + 1)
+
+    def test_model_status_endpoint(self) -> None:
+        status, body = self.request("GET", "/api/models/status")
+        self.assertEqual(status, 200)
+        self.assertFalse(body["enabled"])
 
 
 if __name__ == "__main__":

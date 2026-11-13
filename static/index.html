@@ -269,7 +269,7 @@
             <div>
               <p class="eyebrow">RETRIEVAL QUALITY</p>
               <h1>检索评测</h1>
-              <p>评测由 FastAPI 执行，对比关键词、字词向量和混合检索。</p>
+              <p>评测由 FastAPI 执行，对比 BM25、BGE 语义向量和 Cross-Encoder 混合检索。</p>
             </div>
             <button class="button primary" id="runEvaluation" type="button">
               <svg><use href="#i-refresh"></use></svg><span>重新运行</span>
@@ -277,23 +277,23 @@
           </header>
           <div class="note">
             <svg><use href="#i-check"></use></svg>
-            <p><strong>12 个固定问题</strong>覆盖事实检索、版本对比和无依据拒答，全部指标由 Python 服务实时计算。</p>
+            <p><strong>54 个固定问题</strong>覆盖事实检索、改写查询、版本对比和 10 个无依据负例，全部指标由 Python 服务实时计算。</p>
           </div>
           <div class="metrics">
             <article>
               <div><span>关键词检索</span><small>BM25 baseline</small></div>
               <strong data-pass="keyword">--</strong><small>综合通过率</small>
-              <footer>Recall@3 <b data-recall="keyword">--</b> · MRR <b data-mrr="keyword">--</b></footer>
+              <footer>Recall@5 <b data-recall="keyword">--</b> · MRR <b data-mrr="keyword">--</b></footer>
             </article>
             <article>
-              <div><span>字词向量</span><small>TF-IDF cosine</small></div>
+              <div><span>BGE 语义向量</span><small>bge-small-zh-v1.5</small></div>
               <strong data-pass="vector">--</strong><small>综合通过率</small>
-              <footer>Recall@3 <b data-recall="vector">--</b> · MRR <b data-mrr="vector">--</b></footer>
+              <footer>Recall@5 <b data-recall="vector">--</b> · MRR <b data-mrr="vector">--</b></footer>
             </article>
             <article class="featured">
               <div><span>混合检索</span><small>BM25 + vector + rerank</small></div>
               <strong data-pass="hybrid">--</strong><small>综合通过率</small>
-              <footer>Recall@3 <b data-recall="hybrid">--</b> · MRR <b data-mrr="hybrid">--</b></footer>
+              <footer>Recall@5 <b data-recall="hybrid">--</b> · MRR <b data-mrr="hybrid">--</b></footer>
             </article>
           </div>
           <div class="evaluation-detail">

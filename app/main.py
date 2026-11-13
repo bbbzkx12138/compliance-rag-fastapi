@@ -17,11 +17,21 @@ from app.config import (
     APP_ENV,
     APP_LOG_JSON,
     APP_LOG_LEVEL,
+    EMBEDDING_BATCH_SIZE,
+    EMBEDDING_MODEL_PATH,
+    EMBEDDING_QUERY_PREFIX,
+    MODEL_DEVICE,
     APP_NAME,
     APP_VERSION,
     DATABASE_PATH,
+    MODELS_ENABLED,
     POLICIES_PATH,
+    RERANK_CANDIDATES,
+    RERANK_ENABLED,
+    RERANK_MAX_LENGTH,
+    RERANK_MODEL_PATH,
     STATIC_DIR,
+    TORCH_THREADS,
     WEB_CONCURRENCY,
     load_policies,
 )
@@ -34,6 +44,7 @@ from app.schemas import (
 from app.services.index_manager import IndexManager
 from app.services.repository import PolicyRepository
 from app.services.retrieval import unique_tokens
+from app.services.semantic import SemanticModelRuntime
 
 
 logger = logging.getLogger("policylens.http")
@@ -142,7 +153,29 @@ def create_app(
     repository = PolicyRepository(resolved_database_path)
     seed_result = repository.sync_builtin_documents(policies["documents"])
     documents = repository.list_documents()
-    index_manager = IndexManager(policies, documents)
+    semantic_runtime = (
+        SemanticModelRuntime(
+            embedding_model_path=EMBEDDING_MODEL_PATH,
+            reranker_model_path=RERANK_MODEL_PATH,
+            device=MODEL_DEVICE,
+            query_prefix=EMBEDDING_QUERY_PREFIX,
+            embedding_batch_size=EMBEDDING_BATCH_SIZE,
+            rerank_max_length=RERANK_MAX_LENGTH,
+            torch_threads=TORCH_THREADS,
+        )
+        if MODELS_ENABLED
+        else None
+    )
+    index_manager = IndexManager(
+        policies,
+        documents,
+        semantic_runtime=semantic_runtime,
+        vector_repository=repository if semantic_runtime is not None else None,
+        rerank_enabled=MODELS_ENABLED and RERANK_ENABLED,
+        rerank_candidates=RERANK_CANDIDATES,
+    )
+    if semantic_runtime is not None and RERANK_ENABLED:
+        semantic_runtime.warmup_reranker()
 
     if WEB_CONCURRENCY > 1:
         logger.warning(
@@ -162,6 +195,7 @@ def create_app(
     application.state.repository = repository
     application.state.index_manager = index_manager
     application.state.seed_result = seed_result
+    application.state.semantic_runtime = semantic_runtime
     application.state.schema_version = repository.schema_version()
     application.state.started_at = datetime.now(timezone.utc)
 
@@ -298,6 +332,11 @@ def create_app(
             "seed": application.state.seed_result,
             "database": current_repository().stats(),
             "meta": current_index().metadata(),
+            "models": (
+                semantic_runtime.status()
+                if semantic_runtime is not None
+                else {"enabled": False}
+            ),
         }
 
     @application.get("/api", tags=["system"])
@@ -315,6 +354,9 @@ def create_app(
                 "evaluate": "POST /api/evaluate",
                 "import_document": "POST /api/documents",
                 "delete_document": "DELETE /api/documents/{document_id}",
+                "index_status": "GET /api/index/status",
+                "index_rebuild": "POST /api/index/rebuild",
+                "model_status": "GET /api/models/status",
             },
         }
 
@@ -393,6 +435,12 @@ def create_app(
                 "expanded_terms": search["expanded_terms"],
                 "unseen_terms": search["unseen_terms"],
                 "candidate_count": len(search["results"]),
+                "query_rewrites": search["query_rewrites"],
+                "semantic_enabled": search["semantic_enabled"],
+                "rerank_applied": search["rerank_applied"],
+                "semantic_ms": search["semantic_ms"],
+                "rerank_ms": search["rerank_ms"],
+                "vector_index_backend": search["vector_index_backend"],
             },
             "meta": current_index().metadata(),
         }
@@ -406,6 +454,11 @@ def create_app(
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "case_count": current_index().metadata()["evaluation_case_count"],
             "results": results,
+            "models": (
+                semantic_runtime.status()
+                if semantic_runtime is not None
+                else {"enabled": False}
+            ),
         }
 
     @application.post("/api/documents", status_code=201, tags=["documents"])
@@ -445,6 +498,17 @@ def create_app(
         return {
             **current_index().status(),
             "database": current_repository().stats(),
+        }
+
+    @application.get("/api/models/status", tags=["index"])
+    async def model_status():
+        if semantic_runtime is None:
+            return {"ok": True, "enabled": False, "models": None}
+        return {
+            "ok": True,
+            "enabled": True,
+            "models": semantic_runtime.status(),
+            "meta": current_index().metadata(),
         }
 
     @application.post("/api/index/rebuild", tags=["index"])

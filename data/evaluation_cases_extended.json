@@ -1,0 +1,338 @@
+[
+  {
+    "id": "E13",
+    "query": "员工去北京出差，普通员工住宿一晚最多能报多少？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["600元"],
+    "should_refuse": false
+  },
+  {
+    "id": "E14",
+    "query": "出差坐飞机可以坐公务舱吗？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["5小时"],
+    "should_refuse": false
+  },
+  {
+    "id": "E15",
+    "query": "境外出差需要提前几天申请？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["5个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E16",
+    "query": "差旅结束多久内必须提交报销？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["15个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E17",
+    "query": "L4核心数据可以放在个人网盘吗？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["不得存储"],
+    "should_refuse": false
+  },
+  {
+    "id": "E18",
+    "query": "收集身份证号需要单独同意吗？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["单独同意"],
+    "should_refuse": false
+  },
+  {
+    "id": "E19",
+    "query": "客户数据能否用于供应商训练模型？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["模型训练"],
+    "should_refuse": false
+  },
+  {
+    "id": "E20",
+    "query": "高权限账号多久复核一次？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["每季度"],
+    "should_refuse": false
+  },
+  {
+    "id": "E21",
+    "query": "收到超过200元的非现金礼品怎么办？",
+    "scope": "current",
+    "expected_doc_ids": ["GFT-003"],
+    "expected_terms": ["登记"],
+    "should_refuse": false
+  },
+  {
+    "id": "E22",
+    "query": "客户请吃饭人均超过500元需要谁批准？",
+    "scope": "current",
+    "expected_doc_ids": ["GFT-003"],
+    "expected_terms": ["商业道德办公室"],
+    "should_refuse": false
+  },
+  {
+    "id": "E23",
+    "query": "近亲属在供应商任职多久内申报？",
+    "scope": "current",
+    "expected_doc_ids": ["GFT-003"],
+    "expected_terms": ["5个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E24",
+    "query": "生产数据库被勒索属于什么等级事件？",
+    "scope": "current",
+    "expected_doc_ids": ["SEC-004"],
+    "expected_terms": ["重大"],
+    "should_refuse": false
+  },
+  {
+    "id": "E25",
+    "query": "数据泄露后可以自己联系客户说明吗？",
+    "scope": "current",
+    "expected_doc_ids": ["SEC-004"],
+    "expected_terms": ["不得自行联系"],
+    "should_refuse": false
+  },
+  {
+    "id": "E26",
+    "query": "安全事件处置时可以删除日志吗？",
+    "scope": "current",
+    "expected_doc_ids": ["SEC-004"],
+    "expected_terms": ["不得擅自关闭日志"],
+    "should_refuse": false
+  },
+  {
+    "id": "E27",
+    "query": "供应商合同必须包含哪些合规条款？",
+    "scope": "current",
+    "expected_doc_ids": ["VND-005"],
+    "expected_terms": ["反腐败", "审计权"],
+    "should_refuse": false
+  },
+  {
+    "id": "E28",
+    "query": "采购人员能接受供应商旅游安排吗？",
+    "scope": "current",
+    "expected_doc_ids": ["VND-005"],
+    "expected_terms": ["旅游"],
+    "should_refuse": false
+  },
+  {
+    "id": "E29",
+    "query": "供应商股权发生变化后多久复核？",
+    "scope": "current",
+    "expected_doc_ids": ["VND-005"],
+    "expected_terms": ["10个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E30",
+    "query": "匿名举报需要提供哪些材料？",
+    "scope": "current",
+    "expected_doc_ids": ["WHL-006"],
+    "expected_terms": ["时间", "地点"],
+    "should_refuse": false
+  },
+  {
+    "id": "E31",
+    "query": "举报调查一般多久完成？",
+    "scope": "current",
+    "expected_doc_ids": ["WHL-006"],
+    "expected_terms": ["30个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E32",
+    "query": "涉及高级管理人员的举报由谁处理？",
+    "scope": "current",
+    "expected_doc_ids": ["WHL-006"],
+    "expected_terms": ["审计委员会"],
+    "should_refuse": false
+  },
+  {
+    "id": "E33",
+    "query": "员工每月可以远程办公几天？",
+    "scope": "current",
+    "expected_doc_ids": ["REM-007"],
+    "expected_terms": ["8个"],
+    "should_refuse": false
+  },
+  {
+    "id": "E34",
+    "query": "在家能打印核心数据吗？",
+    "scope": "current",
+    "expected_doc_ids": ["REM-007"],
+    "expected_terms": ["禁止"],
+    "should_refuse": false
+  },
+  {
+    "id": "E35",
+    "query": "远程办公电脑丢失多久报告？",
+    "scope": "current",
+    "expected_doc_ids": ["REM-007"],
+    "expected_terms": ["1小时"],
+    "should_refuse": false
+  },
+  {
+    "id": "E36",
+    "query": "非标准合同法务多久反馈审核意见？",
+    "scope": "current",
+    "expected_doc_ids": ["CTR-008"],
+    "expected_terms": ["3个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E37",
+    "query": "合同签完后多久归档？",
+    "scope": "current",
+    "expected_doc_ids": ["CTR-008"],
+    "expected_terms": ["5个工作日"],
+    "should_refuse": false
+  },
+  {
+    "id": "E38",
+    "query": "空白合同可以盖章吗？",
+    "scope": "current",
+    "expected_doc_ids": ["CTR-008"],
+    "expected_terms": ["严禁"],
+    "should_refuse": false
+  },
+  {
+    "id": "E39",
+    "query": "出差打车报销需要什么材料？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["行程单", "发票"],
+    "should_refuse": false
+  },
+  {
+    "id": "E40",
+    "query": "敏感个人信息包括哪些内容？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["生物识别", "金融账户"],
+    "should_refuse": false
+  },
+  {
+    "id": "E41",
+    "query": "高风险供应商准入前要做什么尽调？",
+    "scope": "current",
+    "expected_doc_ids": ["VND-005"],
+    "expected_terms": ["现场或远程深度尽调"],
+    "should_refuse": false
+  },
+  {
+    "id": "E42",
+    "query": "商业招待可以去私人会所吗？",
+    "scope": "current",
+    "expected_doc_ids": ["GFT-003"],
+    "expected_terms": ["不得"],
+    "should_refuse": false
+  },
+  {
+    "id": "E43",
+    "query": "居家办公可以使用家庭网络吗？",
+    "scope": "current",
+    "expected_doc_ids": ["REM-007"],
+    "expected_terms": ["家庭私有网络"],
+    "should_refuse": false
+  },
+  {
+    "id": "E44",
+    "query": "公司电脑丢失怎么处理？",
+    "scope": "current",
+    "expected_doc_ids": ["REM-007"],
+    "expected_terms": ["1小时"],
+    "should_refuse": false
+  },
+  {
+    "id": "E45",
+    "query": "酒店费最多报多少？",
+    "scope": "current",
+    "expected_doc_ids": ["TRV-001"],
+    "expected_terms": ["600元"],
+    "should_refuse": false
+  },
+  {
+    "id": "E46",
+    "query": "资料传到海外要经过什么流程？",
+    "scope": "current",
+    "expected_doc_ids": ["DAT-002"],
+    "expected_terms": ["数据合规委员会"],
+    "should_refuse": false
+  },
+  {
+    "id": "E47",
+    "query": "员工可以带宠物上班吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E48",
+    "query": "公司可以给员工发放股票期权吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E49",
+    "query": "办公室可以安装人脸识别考勤吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E50",
+    "query": "员工可以申请六个月无薪假吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E51",
+    "query": "食堂供应商需要提供清真认证吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E52",
+    "query": "员工可以报销健身房会员费吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E53",
+    "query": "公司可以组织出境团建吗？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  },
+  {
+    "id": "E54",
+    "query": "员工每月最多加班多少小时？",
+    "scope": "current",
+    "expected_doc_ids": [],
+    "expected_terms": [],
+    "should_refuse": true
+  }
+]

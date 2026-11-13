@@ -16,13 +16,14 @@
     busy: false,
     isComposing: false,
     evaluation: null,
+    evaluationRunning: false,
     online: false
   };
 
   const elements = {};
   const modeLabels = {
     keyword: "关键词 BM25",
-    vector: "字词向量",
+    vector: "BGE 语义向量",
     hybrid: "混合检索"
   };
 
@@ -137,7 +138,9 @@
       await bootstrap();
       setServiceStatus("online", "FastAPI 已连接");
       renderAll();
-      await runEvaluation(false);
+      if (state.activeView === "evaluation") {
+        void runEvaluation(false);
+      }
       const initialQuestion = parameters.get("q");
       if (initialQuestion) {
         window.setTimeout(() => {
@@ -312,6 +315,9 @@
     });
     closeLibrary();
     if (view === "knowledge") renderDocumentTable();
+    if (view === "evaluation" && state.online && !state.evaluation) {
+      void runEvaluation(false);
+    }
   }
 
   function setScope(scope) {
@@ -732,11 +738,14 @@
           <div class="trace-cell"><span>耗时</span><strong>${trace.elapsed_ms.toFixed(1)} ms</strong></div>
           <div class="trace-cell"><span>版本范围</span><strong>${trace.scope === "current" ? "仅现行有效" : "含历史版本"}</strong></div>
           <div class="trace-cell"><span>部门过滤</span><strong>${escapeHtml(trace.department === "all" ? "全部部门" : trace.department)}</strong></div>
+          <div class="trace-cell"><span>BGE 向量</span><strong>${trace.semantic_enabled ? trace.vector_index_backend : "未启用"} · ${trace.semantic_ms.toFixed(1)} ms</strong></div>
+          <div class="trace-cell"><span>Cross-Encoder</span><strong>${trace.rerank_applied ? "已重排" : "未启用"} · ${trace.rerank_ms.toFixed(1)} ms</strong></div>
         </div>
       </section>
       <section class="trace-section">
         <h3>查询扩展</h3>
         <div class="terms">
+          ${(trace.query_rewrites || []).map((rule) => `<span class="term">↻ ${escapeHtml(rule)}</span>`).join("")}
           ${trace.expanded_terms.map((term) => `<span class="term">+ ${escapeHtml(term)}</span>`).join("") || `<span class="trace-note">未触发同义词扩展</span>`}
           ${trace.unseen_terms.slice(0, 5).map((term) => `<span class="term unseen">? ${escapeHtml(term)}</span>`).join("")}
         </div>
@@ -824,7 +833,7 @@
       const documentResponse = await api("/api/documents");
       state.documents = documentResponse.documents;
       renderAll();
-      await runEvaluation(false);
+      state.evaluation = null;
       elements.uploadDialog.close();
       elements.uploadForm.reset();
       elements.uploadDate.value = localDateString();
@@ -837,7 +846,11 @@
   }
 
   async function runEvaluation(notify) {
+    if (state.evaluationRunning) return;
+    state.evaluationRunning = true;
     elements.runEvaluation.disabled = true;
+    elements.evaluationTableBody.innerHTML =
+      `<tr><td colspan="6" class="empty">正在运行 BGE 向量与 Cross-Encoder 评测，首次运行可能需要约一分钟</td></tr>`;
     try {
       if (!state.online) throw new Error("FastAPI 后端未连接");
       const payload = await api("/api/evaluate", {
@@ -857,6 +870,7 @@
         `<tr><td colspan="6" class="empty">${escapeHtml(error.message)}</td></tr>`;
       if (notify) showToast(`评测失败：${error.message}`, true);
     } finally {
+      state.evaluationRunning = false;
       elements.runEvaluation.disabled = false;
     }
   }
@@ -866,7 +880,7 @@
       document.querySelector(`[data-pass="${mode}"]`).textContent =
         percent(result.passed / result.total);
       document.querySelector(`[data-recall="${mode}"]`).textContent =
-        percent(result.recall_at_3);
+        percent(result.recall_at_5);
       document.querySelector(`[data-mrr="${mode}"]`).textContent =
         Number(result.mrr).toFixed(2);
     });

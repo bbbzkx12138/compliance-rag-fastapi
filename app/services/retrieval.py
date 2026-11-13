@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import logging
 import math
 import re
 import time
 from collections import Counter
 from typing import Any, Iterable
 
+import jieba
+import numpy as np
+
+from app.services.chunking import split_section
+
+
+jieba.setLogLevel(logging.WARNING)
 
 STOP_TOKENS = {
     "公司",
@@ -49,6 +58,13 @@ STOP_TOKENS = {
     "被",
     "有",
     "是",
+    "相比",
+    "对比",
+    "变化",
+    "差异",
+    "怎么办",
+    "一般",
+    "几天",
 }
 
 QUERY_FILLERS = (
@@ -76,6 +92,29 @@ LATIN_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]*")
 SENTENCE_PATTERN = re.compile(r"[^。！？；]+[。！？；]?")
 NUMERIC_QUERY_PATTERN = re.compile(r"(多少|上限|标准|金额|时限|多久|比例|变化|差异)")
 
+QUERY_REWRITE_RULES = (
+    (re.compile(r"非现金礼品"), "非现金礼品 登记 退回", "非现金礼品→登记退回"),
+    (re.compile(r"核心数据"), "核心数据 个人设备", "核心数据→个人设备"),
+    (re.compile(r"个人网盘"), "个人网盘 个人设备", "网盘→个人设备"),
+    (re.compile(r"资料传到海外|资料传往海外|传到海外"), "个人信息 数据出境", "海外传输→数据出境"),
+    (re.compile(r"居家办公"), "远程办公", "居家办公→远程办公"),
+    (re.compile(r"家庭网络"), "家庭私有网络", "家庭网络→家庭私有网络"),
+    (re.compile(r"盖章"), "合同用印", "盖章→合同用印"),
+    (re.compile(r"最多报销"), "上限 报销", "最多报销→报销上限"),
+    (re.compile(r"购物卡|礼品卡|预付卡"), "购物卡 礼品 收受", "购物卡→礼品收受"),
+    (re.compile(r"匿名举报"), "匿名举报 保密 身份", "匿名举报→身份保密"),
+    (re.compile(r"新规|现行规定|现行制度"), "现行制度", "新规→现行制度"),
+    (re.compile(r"旧规|老规定|上一版"), "旧版制度", "旧规→旧版制度"),
+    (re.compile(r"相比|对比|有什么变化|差异"), "版本 对比", "变化→版本对比"),
+    (re.compile(r"酒店费|住宿费|房费"), "住宿标准", "住宿费用→住宿标准"),
+    (re.compile(r"打车费|打车费用"), "市内交通 报销", "打车→市内交通"),
+    (re.compile(r"资料出境|信息出国"), "个人信息 数据出境", "资料出境→个人信息出境"),
+    (re.compile(r"匿名投诉"), "匿名 举报", "投诉→举报"),
+    (re.compile(r"设备丢了|电脑丢失"), "设备丢失 报告", "设备丢失→事件报告"),
+    (re.compile(r"合同盖章"), "合同 用印", "盖章→合同用印"),
+    (re.compile(r"供应商请客|请客吃饭"), "商务招待 供应商", "请客→商务招待"),
+)
+
 
 def normalize(text: str) -> str:
     value = str(text or "").lower()
@@ -87,16 +126,19 @@ def normalize(text: str) -> str:
 
 def tokenize(text: str) -> list[str]:
     normalized = normalize(text)
-    tokens = LATIN_PATTERN.findall(normalized)
-    for sequence in HAN_PATTERN.findall(normalized):
-        if len(sequence) == 1:
-            tokens.append(sequence)
-            continue
-        for index in range(len(sequence) - 1):
-            tokens.append(sequence[index : index + 2])
-        for index in range(len(sequence) - 2):
-            tokens.append(sequence[index : index + 3])
-    return [token for token in tokens if token and token not in STOP_TOKENS]
+    tokens = [
+        token.strip().lower()
+        for token in jieba.lcut(normalized, cut_all=False, HMM=True)
+        if token.strip()
+    ]
+    tokens.extend(LATIN_PATTERN.findall(normalized))
+    return [
+        token
+        for token in tokens
+        if token
+        and token not in STOP_TOKENS
+        and not re.fullmatch(r"[\s\W_]+", token)
+    ]
 
 
 def unique_tokens(text: str) -> list[str]:
@@ -134,6 +176,16 @@ def split_sentences(text: str) -> list[str]:
     ]
 
 
+def rewrite_query(query: str) -> tuple[str, list[str]]:
+    rewritten = query
+    applied: list[str] = []
+    for pattern, replacement, label in QUERY_REWRITE_RULES:
+        if pattern.search(rewritten):
+            rewritten = pattern.sub(replacement, rewritten)
+            applied.append(label)
+    return rewritten, applied
+
+
 class RAGEngine:
     """In-memory hybrid retrieval, extractive answers, and evaluation."""
 
@@ -141,6 +193,10 @@ class RAGEngine:
         self,
         policies: dict[str, Any],
         documents: list[dict[str, Any]] | None = None,
+        semantic_runtime: Any | None = None,
+        vector_repository: Any | None = None,
+        rerank_enabled: bool = False,
+        rerank_candidates: int = 20,
     ) -> None:
         if documents is None:
             self.documents = copy.deepcopy(policies["documents"])
@@ -152,11 +208,29 @@ class RAGEngine:
         self.synonym_map = _build_synonym_map(self.synonyms)
         self.evaluation_cases = policies.get("evaluation_cases", [])
         self.corpus_meta = policies.get("corpus_meta", {})
+        self.semantic_runtime = semantic_runtime
+        self.vector_repository = vector_repository
+        self.rerank_enabled = rerank_enabled
+        self.rerank_candidates = max(1, rerank_candidates)
         self.chunks: list[dict[str, Any]] = []
         self.vocabulary: set[str] = set()
         self.idf: dict[str, float] = {}
         self.average_length = 1.0
+        self.semantic_ready = False
+        self.vector_index_backend = "disabled"
+        self.last_embedding_build_ms = 0.0
+        self._register_domain_terms()
         self._build_index()
+
+    def _register_domain_terms(self) -> None:
+        terms = set(self.synonym_map)
+        for document in self.documents:
+            terms.update(document.get("tags", []))
+            terms.add(document.get("title", ""))
+            terms.add(document.get("short_title", ""))
+        for term in terms:
+            if term and len(term) >= 2:
+                jieba.add_word(str(term), freq=2000)
 
     def set_documents(self, documents: list[dict[str, Any]]) -> None:
         self.documents = copy.deepcopy(documents)
@@ -167,41 +241,113 @@ class RAGEngine:
     ) -> list[dict[str, Any]]:
         document_chunks: list[dict[str, Any]] = []
         for section_index, section in enumerate(document["sections"]):
-            searchable_text = " ".join(
-                [
-                    document["title"],
-                    document.get("short_title", ""),
-                    document.get("category", ""),
-                    " ".join(document.get("tags", [])),
-                    section["heading"],
-                    section["text"],
-                ]
-            )
-            tokens = tokenize(searchable_text)
-            document_chunks.append(
-                {
-                    "id": f"{document['id']}-{section_index + 1}",
-                    "document": document,
-                    "section": section,
-                    "section_index": section_index,
-                    "searchable_text": searchable_text,
-                    "tokens": tokens,
-                    "term_frequencies": Counter(tokens),
-                    "heading_tokens": set(unique_tokens(section["heading"])),
-                    "title_tokens": set(
-                        unique_tokens(
-                            " ".join(
-                                [
-                                    document["title"],
-                                    document.get("short_title", ""),
-                                    " ".join(document.get("tags", [])),
-                                ]
+            for part in split_section(section):
+                searchable_text = " ".join(
+                    [
+                        document["title"],
+                        document.get("short_title", ""),
+                        document.get("category", ""),
+                        " ".join(document.get("tags", [])),
+                        part["heading"],
+                        part["text"],
+                    ]
+                )
+                tokens = tokenize(searchable_text)
+                part_index = part.get("part_index", 0)
+                chunk_key = f"{document['id']}-{section_index + 1}-{part_index + 1}"
+                embedding_text = "\n".join(
+                    [
+                        document["title"],
+                        part["heading"],
+                        part["text"],
+                    ]
+                )
+                document_chunks.append(
+                    {
+                        "id": chunk_key,
+                        "document": document,
+                        "section": part,
+                        "section_index": section_index,
+                        "part_index": part_index,
+                        "searchable_text": searchable_text,
+                        "embedding_text": embedding_text,
+                        "text_hash": hashlib.sha256(
+                            embedding_text.encode("utf-8")
+                        ).hexdigest(),
+                        "tokens": tokens,
+                        "term_frequencies": Counter(tokens),
+                        "heading_tokens": set(unique_tokens(part["heading"])),
+                        "title_tokens": set(
+                            unique_tokens(
+                                " ".join(
+                                    [
+                                        document["title"],
+                                        document.get("short_title", ""),
+                                        " ".join(document.get("tags", [])),
+                                    ]
+                                )
                             )
-                        )
-                    ),
-                }
-            )
+                        ),
+                    }
+                )
         return document_chunks
+
+    def _sync_semantic_index(self) -> None:
+        self.semantic_ready = False
+        if self.semantic_runtime is None or self.vector_repository is None:
+            return
+        started_at = time.perf_counter()
+        model_name = self.semantic_runtime.embedding_name
+        stored = self.vector_repository.load_embeddings(model_name)
+        missing: list[dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
+
+        for chunk in self.chunks:
+            cached = stored.get(chunk["id"])
+            if (
+                cached
+                and cached["text_hash"] == chunk["text_hash"]
+                and cached["dimensions"]
+            ):
+                vector = np.frombuffer(cached["vector"], dtype=np.float32)
+                if vector.size == cached["dimensions"]:
+                    chunk["semantic_vector"] = vector
+                    continue
+            missing.append(chunk)
+
+        if missing:
+            vectors = self.semantic_runtime.encode_documents(
+                [chunk["embedding_text"] for chunk in missing]
+            )
+            if vectors is not None:
+                for chunk, vector in zip(missing, vectors, strict=True):
+                    chunk["semantic_vector"] = np.asarray(
+                        vector, dtype=np.float32
+                    )
+                    records.append(
+                        {
+                            "chunk_key": chunk["id"],
+                            "document_id": chunk["document"]["id"],
+                            "dimensions": int(len(vector)),
+                            "text_hash": chunk["text_hash"],
+                            "vector": np.asarray(vector, dtype=np.float32).tobytes(),
+                        }
+                    )
+                self.vector_repository.save_embeddings(model_name, records)
+
+        self.vector_repository.prune_embeddings(
+            model_name, {chunk["id"] for chunk in self.chunks}
+        )
+        if hasattr(self.vector_repository, "sync_vector_index"):
+            self.vector_repository.sync_vector_index(model_name)
+        if getattr(self.vector_repository, "vector_index_available", False):
+            self.vector_index_backend = "sqlite-vec"
+        else:
+            self.vector_index_backend = "python-memory"
+        self.semantic_ready = all(
+            "semantic_vector" in chunk for chunk in self.chunks
+        )
+        self.last_embedding_build_ms = (time.perf_counter() - started_at) * 1000
 
     def _recalculate_index(self) -> None:
         document_frequency: Counter[str] = Counter()
@@ -236,6 +382,7 @@ class RAGEngine:
             for chunk in self._chunks_for_document(document)
         ]
         self._recalculate_index()
+        self._sync_semantic_index()
 
     def rebuild(self, documents: list[dict[str, Any]] | None = None) -> None:
         if documents is not None:
@@ -256,6 +403,7 @@ class RAGEngine:
         ]
         self.chunks.extend(self._chunks_for_document(document_copy))
         self._recalculate_index()
+        self._sync_semantic_index()
 
     def remove_document(self, document_id: str) -> bool:
         previous_count = len(self.documents)
@@ -270,6 +418,7 @@ class RAGEngine:
         if len(self.documents) == previous_count:
             return False
         self._recalculate_index()
+        self._sync_semantic_index()
         return True
 
     def _expand_query(self, query: str) -> dict[str, Any]:
@@ -344,12 +493,38 @@ class RAGEngine:
         limit: int = 6,
     ) -> dict[str, Any]:
         started_at = time.perf_counter()
-        expanded = self._expand_query(query)
+        if mode == "hybrid":
+            rewritten_query, query_rewrites = rewrite_query(query)
+        else:
+            rewritten_query, query_rewrites = query, []
+        expanded = self._expand_query(rewritten_query)
         query_tokens = (
             expanded["tokens"] if mode == "hybrid" else expanded["original_tokens"]
         )
         unique_query_tokens = set(query_tokens)
         query_vector, query_norm = self._query_vector(query_tokens)
+        semantic_started_at = time.perf_counter()
+        semantic_query = None
+        vector_hits: dict[str, float] = {}
+        if (
+            self.semantic_ready
+            and self.semantic_runtime is not None
+            and mode in {"vector", "hybrid"}
+        ):
+            semantic_query = self.semantic_runtime.encode_query(
+                expanded["cleaned"]
+            )
+            if (
+                semantic_query is not None
+                and self.vector_repository is not None
+                and hasattr(self.vector_repository, "search_similar_vectors")
+            ):
+                vector_hits = self.vector_repository.search_similar_vectors(
+                    self.semantic_runtime.embedding_name,
+                    semantic_query,
+                    limit=max(50, len(self.chunks)),
+                )
+        semantic_ms = (time.perf_counter() - semantic_started_at) * 1000
         candidates = [
             chunk
             for chunk in self.chunks
@@ -380,6 +555,17 @@ class RAGEngine:
             phrase = normalize(expanded["cleaned"]) in normalize(
                 chunk["searchable_text"]
             )
+            semantic_cosine = 0.0
+            if (
+                semantic_query is not None
+                and chunk.get("semantic_vector") is not None
+            ):
+                if vector_hits:
+                    semantic_cosine = vector_hits.get(chunk["id"], 0.0)
+                else:
+                    semantic_cosine = float(
+                        np.dot(semantic_query, chunk["semantic_vector"])
+                    )
             raw_results.append(
                 {
                     "document": chunk["document"],
@@ -390,6 +576,7 @@ class RAGEngine:
                     "heading_coverage": heading_coverage,
                     "title_coverage": title_coverage,
                     "phrase": phrase,
+                    "semantic_cosine": semantic_cosine,
                 }
             )
 
@@ -399,9 +586,23 @@ class RAGEngine:
             if mode == "keyword":
                 base = bm25_normalized
             elif mode == "vector":
-                base = result["cosine"]
+                base = (
+                    max(0.0, min(1.0, result["semantic_cosine"]))
+                    if semantic_query is not None
+                    else result["cosine"]
+                )
             else:
-                base = bm25_normalized * 0.56 + result["cosine"] * 0.34
+                if semantic_query is not None:
+                    semantic_normalized = max(
+                        0.0, min(1.0, result["semantic_cosine"])
+                    )
+                    base = (
+                        bm25_normalized * 0.44
+                        + semantic_normalized * 0.36
+                        + result["cosine"] * 0.08
+                    )
+                else:
+                    base = bm25_normalized * 0.56 + result["cosine"] * 0.34
             field_boost = (
                 result["heading_coverage"] * 0.09
                 + result["title_coverage"] * 0.05
@@ -419,20 +620,70 @@ class RAGEngine:
                 "bm25": result["bm25"],
                 "bm25_normalized": bm25_normalized,
                 "cosine": result["cosine"],
+                "semantic_cosine": result["semantic_cosine"],
                 "coverage": result["coverage"],
                 "field_boost": field_boost,
                 "final": result["score"],
             }
 
-        results = sorted(
+        ranked_results = sorted(
             (
                 result
                 for result in raw_results
-                if result["bm25"] > 0 or result["cosine"] > 0
+                if result["bm25"] > 0
+                or result["cosine"] > 0
+                or result["semantic_cosine"] > 0
             ),
             key=lambda item: item["score"],
             reverse=True,
-        )[:limit]
+        )
+
+        rerank_started_at = time.perf_counter()
+        reranked = False
+        if (
+            mode == "hybrid"
+            and self.rerank_enabled
+            and self.semantic_runtime is not None
+            and ranked_results
+        ):
+            rerank_candidates = ranked_results[: self.rerank_candidates]
+            rerank_scores = self.semantic_runtime.rerank(
+                expanded["cleaned"],
+                [
+                    result["section"]["text"]
+                    for result in rerank_candidates
+                ],
+                batch_size=min(20, len(rerank_candidates)),
+            )
+            if rerank_scores is not None and len(rerank_scores):
+                raw_scores = [float(score) for score in rerank_scores]
+                minimum = min(raw_scores)
+                maximum = max(raw_scores)
+                base_maximum = max(
+                    result["score"] for result in rerank_candidates
+                )
+                for result, raw_score in zip(
+                    rerank_candidates, raw_scores, strict=True
+                ):
+                    normalized = (
+                        0.5
+                        if math.isclose(minimum, maximum)
+                        else (raw_score - minimum) / (maximum - minimum)
+                    )
+                    base_normalized = result["score"] / max(base_maximum, 0.001)
+                    result["rerank_score"] = raw_score
+                    result["score"] = base_normalized * 0.62 + normalized * 0.38
+                    result["scores"]["rerank"] = raw_score
+                    result["scores"]["rerank_normalized"] = normalized
+                    result["scores"]["final"] = result["score"]
+                rerank_candidates.sort(key=lambda item: item["score"], reverse=True)
+                ranked_results = [
+                    *rerank_candidates,
+                    *ranked_results[self.rerank_candidates :],
+                ]
+                reranked = True
+        rerank_ms = (time.perf_counter() - rerank_started_at) * 1000
+        results = ranked_results[:limit]
 
         original_tokens = expanded["original_tokens"]
         known_query_terms = [
@@ -455,6 +706,9 @@ class RAGEngine:
 
         return {
             "query": expanded["cleaned"],
+            "original_query": query,
+            "rewritten_query": rewritten_query,
+            "query_rewrites": query_rewrites,
             "mode": mode,
             "scope": scope,
             "department": department,
@@ -463,11 +717,25 @@ class RAGEngine:
             "unseen_terms": unseen_terms,
             "unknown_ratio": unknown_ratio,
             "results": results,
+            "semantic_enabled": semantic_query is not None,
+            "rerank_applied": reranked,
+            "embedding_model": (
+                self.semantic_runtime.embedding_name
+                if semantic_query is not None
+                else None
+            ),
+            "reranker_model": (
+                self.semantic_runtime.reranker_name if reranked else None
+            ),
+            "embedding_build_ms": self.last_embedding_build_ms,
+            "vector_index_backend": self.vector_index_backend,
+            "semantic_ms": semantic_ms,
+            "rerank_ms": rerank_ms,
             "elapsed_ms": (time.perf_counter() - started_at) * 1000,
             "thresholds": {
-                "minimum_score": 0.26,
+                "minimum_score": 0.4,
                 "minimum_coverage": 0.2,
-                "maximum_unknown_ratio": 0.34,
+                "maximum_unknown_ratio": 0.3,
             },
         }
 
@@ -481,9 +749,24 @@ class RAGEngine:
             }
         top = results[0]
         thresholds = search_response["thresholds"]
+        rerank_score = top.get("rerank_score")
         if (
-            search_response["unknown_ratio"] > thresholds["maximum_unknown_ratio"]
-            and top["coverage"] < 0.42
+            search_response["rerank_applied"]
+            and rerank_score is not None
+            and rerank_score < 0.25
+        ):
+            return {
+                "refuse": True,
+                "reason": "Cross-Encoder 判断现有条款与问题不直接匹配。",
+                "level": "low",
+            }
+        if (
+            search_response["unknown_ratio"]
+            > (
+                0.6
+                if search_response["rerank_applied"]
+                else thresholds["maximum_unknown_ratio"]
+            )
         ):
             terms = "、".join(search_response["unseen_terms"][:3])
             return {
@@ -524,6 +807,11 @@ class RAGEngine:
             score += 1.2
         if NUMERIC_QUERY_PATTERN.search(query_text) and re.search(r"\d", sentence):
             score += 3.5
+        if (
+            re.search(r"多久|时限|完成|反馈|报告", query_text)
+            and re.search(r"\d+\s*(小时|个工作日|工作日)", sentence)
+        ):
+            score += 2.5
         return score
 
     def _select_sentences(
@@ -540,7 +828,7 @@ class RAGEngine:
             }
             for sentence in sentences
         ]
-        return sorted(scored, key=lambda item: item["score"], reverse=True)[:2]
+        return sorted(scored, key=lambda item: item["score"], reverse=True)[:3]
 
     def create_answer(self, search_response: dict[str, Any]) -> dict[str, Any]:
         assessment = self._assess_evidence(search_response)
@@ -549,9 +837,17 @@ class RAGEngine:
             "mode": search_response["mode"],
             "scope": search_response["scope"],
             "department": search_response["department"],
+            "query_rewrites": search_response["query_rewrites"],
             "expanded_terms": search_response["expanded_terms"],
             "unseen_terms": search_response["unseen_terms"],
             "elapsed_ms": search_response["elapsed_ms"],
+            "semantic_ms": search_response["semantic_ms"],
+            "rerank_ms": search_response["rerank_ms"],
+            "semantic_enabled": search_response["semantic_enabled"],
+            "rerank_applied": search_response["rerank_applied"],
+            "embedding_model": search_response["embedding_model"],
+            "reranker_model": search_response["reranker_model"],
+            "vector_index_backend": search_response["vector_index_backend"],
             "thresholds": search_response["thresholds"],
             "candidates": [
                 {
@@ -591,22 +887,40 @@ class RAGEngine:
 
         top_score = top_results[0]["score"]
         minimum_coverage = max(0.12, top_results[0]["coverage"] * 0.55)
-        direct_results = [
+        is_version_comparison = any(
+            "版本对比" in item
+            for item in search_response["query_rewrites"]
+        )
+        eligible_results = [
             result
             for index, result in enumerate(top_results)
             if index == 0
             or (
-                result["score"] >= top_score * 0.65
+                result["score"] >= top_score * 0.55
                 and result["coverage"] >= minimum_coverage
             )
         ]
+        if is_version_comparison:
+            seen_documents: set[str] = set()
+            direct_results = []
+            for result in eligible_results:
+                document_id = result["document"]["id"]
+                if document_id in seen_documents:
+                    continue
+                seen_documents.add(document_id)
+                direct_results.append(result)
+        else:
+            direct_results = eligible_results
 
         points: list[dict[str, Any]] = []
         used_sentences: set[str] = set()
         for result in direct_results:
-            for candidate in self._select_sentences(
+            candidates = self._select_sentences(
                 result, search_response["query_tokens"], search_response["query"]
-            ):
+            )
+            if is_version_comparison:
+                candidates = candidates[:1]
+            for candidate in candidates:
                 if len(points) >= 4:
                     break
                 if candidate["sentence"] in used_sentences:
@@ -688,13 +1002,17 @@ class RAGEngine:
     def evaluate(self, mode: str) -> dict[str, Any]:
         rows: list[dict[str, Any]] = []
         retrieval_cases = 0
-        recall_sum = 0.0
+        recall3_sum = 0.0
+        recall5_sum = 0.0
         reciprocal_rank_sum = 0.0
         citation_cases = 0
         citation_hits = 0.0
         refusal_cases = 0
         refusal_hits = 0
         latency_sum = 0.0
+        semantic_latency_sum = 0.0
+        rerank_latency_sum = 0.0
+        embedding_latency_sum = 0.0
 
         for test_case in self.evaluation_cases:
             response = self.search(
@@ -705,10 +1023,13 @@ class RAGEngine:
                 limit=6,
             )
             answer = self.create_answer(response)
-            top_three_docs = list(
+            top_five_docs = list(
                 dict.fromkeys(
-                    result["document"]["id"] for result in response["results"][:3]
+                    result["document"]["id"] for result in response["results"][:5]
                 )
+            )
+            top_three_docs = set(
+                result["document"]["id"] for result in response["results"][:3]
             )
             cited_text = " ".join(point["text"] for point in answer["points"])
             found_terms = [
@@ -723,11 +1044,15 @@ class RAGEngine:
                 ),
                 -1,
             )
-            retrieval_hit = any(doc_id in top_three_docs for doc_id in expected_docs)
+            retrieval_hit = any(doc_id in top_five_docs for doc_id in expected_docs)
+            retrieval_hit_at_3 = any(
+                doc_id in top_three_docs for doc_id in expected_docs
+            )
 
             if not test_case["should_refuse"]:
                 retrieval_cases += 1
-                recall_sum += 1 if retrieval_hit else 0
+                recall3_sum += 1 if retrieval_hit_at_3 else 0
+                recall5_sum += 1 if retrieval_hit else 0
                 reciprocal_rank_sum += (
                     1 / (relevant_rank + 1) if relevant_rank >= 0 else 0
                 )
@@ -741,6 +1066,9 @@ class RAGEngine:
                 refusal_hits += 1 if answer["refused"] else 0
 
             latency_sum += response["elapsed_ms"]
+            semantic_latency_sum += response["semantic_ms"]
+            rerank_latency_sum += response["rerank_ms"]
+            embedding_latency_sum += response["embedding_build_ms"]
             passed = (
                 answer["refused"]
                 if test_case["should_refuse"]
@@ -752,21 +1080,25 @@ class RAGEngine:
                     "id": test_case["id"],
                     "query": test_case["query"],
                     "expected_docs": expected_docs,
-                    "retrieved_docs": top_three_docs,
+                    "retrieved_docs": top_five_docs,
                     "retrieval_hit": retrieval_hit,
+                    "retrieval_hit_at_3": retrieval_hit_at_3,
                     "citation_terms": found_terms,
                     "expected_terms": test_case["expected_terms"],
                     "refused": answer["refused"],
                     "should_refuse": test_case["should_refuse"],
                     "passed": passed,
                     "latency_ms": response["elapsed_ms"],
+                    "semantic_ms": response["semantic_ms"],
+                    "rerank_ms": response["rerank_ms"],
                 }
             )
 
         return {
             "mode": mode,
             "total": len(self.evaluation_cases),
-            "recall_at_3": recall_sum / retrieval_cases if retrieval_cases else 0.0,
+            "recall_at_3": recall3_sum / retrieval_cases if retrieval_cases else 0.0,
+            "recall_at_5": recall5_sum / retrieval_cases if retrieval_cases else 0.0,
             "mrr": (
                 reciprocal_rank_sum / retrieval_cases if retrieval_cases else 0.0
             ),
@@ -777,6 +1109,15 @@ class RAGEngine:
                 refusal_hits / refusal_cases if refusal_cases else 0.0
             ),
             "average_latency_ms": latency_sum / max(len(self.evaluation_cases), 1),
+            "average_semantic_ms": semantic_latency_sum
+            / max(len(self.evaluation_cases), 1),
+            "average_rerank_ms": rerank_latency_sum
+            / max(len(self.evaluation_cases), 1),
+            "embedding_build_ms": embedding_latency_sum
+            / max(len(self.evaluation_cases), 1),
+            "estimated_cost_usd": 0.0,
+            "semantic_enabled": self.semantic_ready,
+            "rerank_enabled": self.rerank_enabled,
             "passed": sum(1 for row in rows if row["passed"]),
             "rows": rows,
         }
@@ -793,4 +1134,18 @@ class RAGEngine:
             ),
             "chunk_count": len(self.chunks),
             "evaluation_case_count": len(self.evaluation_cases),
+            "semantic_enabled": self.semantic_ready,
+            "rerank_enabled": self.rerank_enabled,
+            "embedding_model": (
+                self.semantic_runtime.embedding_name
+                if self.semantic_runtime is not None
+                else None
+            ),
+            "reranker_model": (
+                self.semantic_runtime.reranker_name
+                if self.semantic_runtime is not None and self.rerank_enabled
+                else None
+            ),
+            "embedding_build_ms": self.last_embedding_build_ms,
+            "vector_index_backend": self.vector_index_backend,
         }

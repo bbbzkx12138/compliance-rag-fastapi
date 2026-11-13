@@ -1,0 +1,4019 @@
+{
+  "ok": true,
+  "generated_at": "2026-11-12T21:30:26.626757+08:00",
+  "case_count": 54,
+  "results": {
+    "keyword": {
+      "mode": "keyword",
+      "total": 54,
+      "recall_at_3": 0.9545454545454546,
+      "recall_at_5": 0.9545454545454546,
+      "mrr": 0.9431818181818182,
+      "citation_accuracy": 0.8181818181818182,
+      "refusal_accuracy": 0.9,
+      "average_latency_ms": 0.5851814844559327,
+      "average_semantic_ms": 0.00033148292762537795,
+      "average_rerank_ms": 0.00016851980170166052,
+      "embedding_build_ms": 8.801000018138438,
+      "estimated_cost_usd": 0.0,
+      "semantic_enabled": true,
+      "rerank_enabled": true,
+      "passed": 45,
+      "rows": [
+        {
+          "id": "E01",
+          "query": "上海出差普通员工住宿每晚上限是多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.7444000220857561,
+          "semantic_ms": 0.001300009898841381,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E02",
+          "query": "客户送2000元购物卡可以收吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "expected_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6345000001601875,
+          "semantic_ms": 0.000500003807246685,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E03",
+          "query": "把个人信息传到境外需要哪些审批？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "expected_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6009999779053032,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E04",
+          "query": "发现疑似数据泄露后多久要报告？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30分钟"
+          ],
+          "expected_terms": [
+            "30分钟"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5630999803543091,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E05",
+          "query": "高风险供应商多久复核一次？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "12个月"
+          ],
+          "expected_terms": [
+            "12个月"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5475999787449837,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E06",
+          "query": "匿名举报人的身份会被公开吗？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "VND-005",
+            "DAT-002",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "严格保密"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5936000379733741,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E07",
+          "query": "在家办公能直接连接公共Wi-Fi吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "VPN"
+          ],
+          "expected_terms": [
+            "VPN"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5954999942332506,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E08",
+          "query": "非标准合同需要提前多久提交法务审核？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5647000507451594,
+          "semantic_ms": 0.00019994331523776054,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E09",
+          "query": "旧版差旅制度里深圳住宿标准是多少？",
+          "expected_docs": [
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001-OLD",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "500元"
+          ],
+          "expected_terms": [
+            "500元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6134000141173601,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E10",
+          "query": "差旅新规相比旧规，住宿标准有什么变化？",
+          "expected_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "600元",
+            "500元"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.6906000198796391,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E11",
+          "query": "公司可以报销宠物保险吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.5042999982833862,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E12",
+          "query": "员工年会在温泉酒店举办需要什么审批？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "CTR-008",
+            "DAT-002",
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.6250000442378223,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E13",
+          "query": "员工去北京出差，普通员工住宿一晚最多能报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6739999516867101,
+          "semantic_ms": 0.000200001522898674,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E14",
+          "query": "出差坐飞机可以坐公务舱吗？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5小时"
+          ],
+          "expected_terms": [
+            "5小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5561999860219657,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E15",
+          "query": "境外出差需要提前几天申请？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "REM-007",
+            "DAT-002",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5322999786585569,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E16",
+          "query": "差旅结束多久内必须提交报销？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "15个工作日"
+          ],
+          "expected_terms": [
+            "15个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5499999970197678,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E17",
+          "query": "L4核心数据可以放在个人网盘吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "不得存储"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.687599997036159,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E18",
+          "query": "收集身份证号需要单独同意吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "单独同意"
+          ],
+          "expected_terms": [
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5295000155456364,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E19",
+          "query": "客户数据能否用于供应商训练模型？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "GFT-003",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "模型训练"
+          ],
+          "expected_terms": [
+            "模型训练"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5870999884791672,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E20",
+          "query": "高权限账号多久复核一次？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "VND-005",
+            "GFT-003",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "每季度"
+          ],
+          "expected_terms": [
+            "每季度"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5216999561525881,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E21",
+          "query": "收到超过200元的非现金礼品怎么办？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "TRV-001",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "登记"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5862999823875725,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E22",
+          "query": "客户请吃饭人均超过500元需要谁批准？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "TRV-001",
+            "CTR-008",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "商业道德办公室"
+          ],
+          "expected_terms": [
+            "商业道德办公室"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6216000183485448,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E23",
+          "query": "近亲属在供应商任职多久内申报？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005",
+            "SEC-004",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5721999914385378,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E24",
+          "query": "生产数据库被勒索属于什么等级事件？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "WHL-006",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "重大"
+          ],
+          "expected_terms": [
+            "重大"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5608000210486352,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E25",
+          "query": "数据泄露后可以自己联系客户说明吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "TRV-001",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得自行联系"
+          ],
+          "expected_terms": [
+            "不得自行联系"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.57640002341941,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E26",
+          "query": "安全事件处置时可以删除日志吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得擅自关闭日志"
+          ],
+          "expected_terms": [
+            "不得擅自关闭日志"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5521000130102038,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E27",
+          "query": "供应商合同必须包含哪些合规条款？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "CTR-008",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "expected_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6535000284202397,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E28",
+          "query": "采购人员能接受供应商旅游安排吗？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "旅游"
+          ],
+          "expected_terms": [
+            "旅游"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5869999877177179,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E29",
+          "query": "供应商股权发生变化后多久复核？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "10个工作日"
+          ],
+          "expected_terms": [
+            "10个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.596199999563396,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E30",
+          "query": "匿名举报需要提供哪些材料？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "TRV-001",
+            "VND-005",
+            "REM-007",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "时间",
+            "地点"
+          ],
+          "expected_terms": [
+            "时间",
+            "地点"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5342999938875437,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E31",
+          "query": "举报调查一般多久完成？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30个工作日"
+          ],
+          "expected_terms": [
+            "30个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5350999999791384,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E32",
+          "query": "涉及高级管理人员的举报由谁处理？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "审计委员会"
+          ],
+          "expected_terms": [
+            "审计委员会"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6295000202953815,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E33",
+          "query": "员工每月可以远程办公几天？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "8个"
+          ],
+          "expected_terms": [
+            "8个"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5480000399984419,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E34",
+          "query": "在家能打印核心数据吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "禁止"
+          ],
+          "expected_terms": [
+            "禁止"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.548600044567138,
+          "semantic_ms": 0.000200001522898674,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E35",
+          "query": "远程办公电脑丢失多久报告？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5768999690189958,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E36",
+          "query": "非标准合同法务多久反馈审核意见？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.589400005992502,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E37",
+          "query": "合同签完后多久归档？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5372000159695745,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E38",
+          "query": "空白合同可以盖章吗？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "严禁"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5245999782346189,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E39",
+          "query": "出差打车报销需要什么材料？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "行程单",
+            "发票"
+          ],
+          "expected_terms": [
+            "行程单",
+            "发票"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6075000273995101,
+          "semantic_ms": 0.000200001522898674,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E40",
+          "query": "敏感个人信息包括哪些内容？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "SEC-004",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "expected_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.5784999812021852,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E41",
+          "query": "高风险供应商准入前要做什么尽调？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "现场或远程深度尽调"
+          ],
+          "expected_terms": [
+            "现场或远程深度尽调"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6820000126026571,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E42",
+          "query": "商业招待可以去私人会所吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得"
+          ],
+          "expected_terms": [
+            "不得"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.6099999882280827,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E43",
+          "query": "居家办公可以使用家庭网络吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "家庭私有网络"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5259999888949096,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E44",
+          "query": "公司电脑丢失怎么处理？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "GFT-003",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 0.49409997882321477,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E45",
+          "query": "酒店费最多报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5297000170685351,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E46",
+          "query": "资料传到海外要经过什么流程？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "VND-005"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [
+            "数据合规委员会"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 0.5485000438056886,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E47",
+          "query": "员工可以带宠物上班吗？",
+          "expected_docs": [],
+          "retrieved_docs": [],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.7728000055067241,
+          "semantic_ms": 0.000500003807246685,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E48",
+          "query": "公司可以给员工发放股票期权吗？",
+          "expected_docs": [],
+          "retrieved_docs": [],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.5201000021770597,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E49",
+          "query": "办公室可以安装人脸识别考勤吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "WHL-006",
+            "GFT-003"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.7267000037245452,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E50",
+          "query": "员工可以申请六个月无薪假吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001",
+            "CTR-008",
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.5671000108122826,
+          "semantic_ms": 0.000400003045797348,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E51",
+          "query": "食堂供应商需要提供清真认证吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002",
+            "WHL-006",
+            "GFT-003"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.6269000004976988,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E52",
+          "query": "员工可以报销健身房会员费吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.5191999953240156,
+          "semantic_ms": 0.000200001522898674,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E53",
+          "query": "公司可以组织出境团建吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "DAT-002"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 0.5173999816179276,
+          "semantic_ms": 0.000200001522898674,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E54",
+          "query": "员工每月最多加班多少小时？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004",
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": false,
+          "should_refuse": true,
+          "passed": false,
+          "latency_ms": 0.5275000003166497,
+          "semantic_ms": 0.000300002284348011,
+          "rerank_ms": 0.000100000761449337
+        }
+      ]
+    },
+    "vector": {
+      "mode": "vector",
+      "total": 54,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0,
+      "mrr": 0.9886363636363636,
+      "citation_accuracy": 0.7954545454545454,
+      "refusal_accuracy": 1.0,
+      "average_latency_ms": 15.859996295249504,
+      "average_semantic_ms": 15.03492777960168,
+      "average_rerank_ms": 0.0002462960158785184,
+      "embedding_build_ms": 8.801000018138438,
+      "estimated_cost_usd": 0.0,
+      "semantic_enabled": true,
+      "rerank_enabled": true,
+      "passed": 45,
+      "rows": [
+        {
+          "id": "E01",
+          "query": "上海出差普通员工住宿每晚上限是多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.674400016199797,
+          "semantic_ms": 15.899600053671747,
+          "rerank_ms": 0.000400003045797348
+        },
+        {
+          "id": "E02",
+          "query": "客户送2000元购物卡可以收吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "expected_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 17.311799980234355,
+          "semantic_ms": 16.393500030972064,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E03",
+          "query": "把个人信息传到境外需要哪些审批？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "expected_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.557600021362305,
+          "semantic_ms": 13.734300038777292,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E04",
+          "query": "发现疑似数据泄露后多久要报告？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30分钟"
+          ],
+          "expected_terms": [
+            "30分钟"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.240699984133244,
+          "semantic_ms": 14.43969999672845,
+          "rerank_ms": 0.000400003045797348
+        },
+        {
+          "id": "E05",
+          "query": "高风险供应商多久复核一次？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "12个月"
+          ],
+          "expected_terms": [
+            "12个月"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.726199966389686,
+          "semantic_ms": 13.995899993460625,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E06",
+          "query": "匿名举报人的身份会被公开吗？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "严格保密"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 14.777999953366816,
+          "semantic_ms": 13.979399984236807,
+          "rerank_ms": 0.00029994407668709755
+        },
+        {
+          "id": "E07",
+          "query": "在家办公能直接连接公共Wi-Fi吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "VPN"
+          ],
+          "expected_terms": [
+            "VPN"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.954899961594492,
+          "semantic_ms": 14.136200014036149,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E08",
+          "query": "非标准合同需要提前多久提交法务审核？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.630399982910603,
+          "semantic_ms": 14.82199999736622,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E09",
+          "query": "旧版差旅制度里深圳住宿标准是多少？",
+          "expected_docs": [
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "500元"
+          ],
+          "expected_terms": [
+            "500元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.13180001731962,
+          "semantic_ms": 15.307100024074316,
+          "rerank_ms": 0.000400003045797348
+        },
+        {
+          "id": "E10",
+          "query": "差旅新规相比旧规，住宿标准有什么变化？",
+          "expected_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "600元",
+            "500元"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 15.148599981330335,
+          "semantic_ms": 14.323000039439648,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E11",
+          "query": "公司可以报销宠物保险吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001",
+            "GFT-003"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 14.334700012113899,
+          "semantic_ms": 13.657900039106607,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E12",
+          "query": "员工年会在温泉酒店举办需要什么审批？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "GFT-003",
+            "TRV-001",
+            "CTR-008"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.989699983038008,
+          "semantic_ms": 14.836299989838153,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E13",
+          "query": "员工去北京出差，普通员工住宿一晚最多能报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 20.353199972305447,
+          "semantic_ms": 19.002299988642335,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E14",
+          "query": "出差坐飞机可以坐公务舱吗？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5小时"
+          ],
+          "expected_terms": [
+            "5小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.020899998489767,
+          "semantic_ms": 14.287300000432879,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E15",
+          "query": "境外出差需要提前几天申请？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "REM-007",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.755000011064112,
+          "semantic_ms": 13.965999998617917,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E16",
+          "query": "差旅结束多久内必须提交报销？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "15个工作日"
+          ],
+          "expected_terms": [
+            "15个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.95829998748377,
+          "semantic_ms": 14.225999999325722,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E17",
+          "query": "L4核心数据可以放在个人网盘吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "不得存储"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 16.378199972677976,
+          "semantic_ms": 15.559399966150522,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E18",
+          "query": "收集身份证号需要单独同意吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "单独同意"
+          ],
+          "expected_terms": [
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.922400005161762,
+          "semantic_ms": 14.166000008117408,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E19",
+          "query": "客户数据能否用于供应商训练模型？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "模型训练"
+          ],
+          "expected_terms": [
+            "模型训练"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.13749995501712,
+          "semantic_ms": 14.31080000475049,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E20",
+          "query": "高权限账号多久复核一次？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "VND-005",
+            "SEC-004",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "每季度"
+          ],
+          "expected_terms": [
+            "每季度"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.526200015097857,
+          "semantic_ms": 13.811900047585368,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E21",
+          "query": "收到超过200元的非现金礼品怎么办？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "登记"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 15.98929997999221,
+          "semantic_ms": 15.169400023296475,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E22",
+          "query": "客户请吃饭人均超过500元需要谁批准？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "TRV-001",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "商业道德办公室"
+          ],
+          "expected_terms": [
+            "商业道德办公室"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.757300017867237,
+          "semantic_ms": 14.92569997208193,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E23",
+          "query": "近亲属在供应商任职多久内申报？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 17.603800049982965,
+          "semantic_ms": 16.77749998634681,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E24",
+          "query": "生产数据库被勒索属于什么等级事件？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "重大"
+          ],
+          "expected_terms": [
+            "重大"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.37909999024123,
+          "semantic_ms": 14.436999976169318,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E25",
+          "query": "数据泄露后可以自己联系客户说明吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得自行联系"
+          ],
+          "expected_terms": [
+            "不得自行联系"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.557699953205884,
+          "semantic_ms": 14.669199998024851,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E26",
+          "query": "安全事件处置时可以删除日志吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得擅自关闭日志"
+          ],
+          "expected_terms": [
+            "不得擅自关闭日志"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.948699961882085,
+          "semantic_ms": 15.1833999552764,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E27",
+          "query": "供应商合同必须包含哪些合规条款？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "expected_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.787300002761185,
+          "semantic_ms": 15.89320000493899,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E28",
+          "query": "采购人员能接受供应商旅游安排吗？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "旅游"
+          ],
+          "expected_terms": [
+            "旅游"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 17.01010001124814,
+          "semantic_ms": 16.21309999609366,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E29",
+          "query": "供应商股权发生变化后多久复核？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003",
+            "WHL-006",
+            "CTR-008",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "10个工作日"
+          ],
+          "expected_terms": [
+            "10个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.933000027667731,
+          "semantic_ms": 14.132400043308735,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E30",
+          "query": "匿名举报需要提供哪些材料？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "TRV-001",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "时间",
+            "地点"
+          ],
+          "expected_terms": [
+            "时间",
+            "地点"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.673400008585304,
+          "semantic_ms": 15.924600011203438,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E31",
+          "query": "举报调查一般多久完成？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30个工作日"
+          ],
+          "expected_terms": [
+            "30个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 17.74209999712184,
+          "semantic_ms": 16.729800030589104,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E32",
+          "query": "涉及高级管理人员的举报由谁处理？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "GFT-003",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "审计委员会"
+          ],
+          "expected_terms": [
+            "审计委员会"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.74190000630915,
+          "semantic_ms": 15.459499962162226,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E33",
+          "query": "员工每月可以远程办公几天？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "8个"
+          ],
+          "expected_terms": [
+            "8个"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.132400032598525,
+          "semantic_ms": 14.407399983610958,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E34",
+          "query": "在家能打印核心数据吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "DAT-002",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "禁止"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 14.412700023967773,
+          "semantic_ms": 13.676000002305955,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E35",
+          "query": "远程办公电脑丢失多久报告？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 17.870700045023113,
+          "semantic_ms": 16.998899984173477,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E36",
+          "query": "非标准合同法务多久反馈审核意见？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.123300010804087,
+          "semantic_ms": 15.351199952419847,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E37",
+          "query": "合同签完后多久归档？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "WHL-006",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.437199977692217,
+          "semantic_ms": 13.71809997363016,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E38",
+          "query": "空白合同可以盖章吗？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "严禁"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 15.149699989706278,
+          "semantic_ms": 14.432600000873208,
+          "rerank_ms": 0.00019994331523776054
+        },
+        {
+          "id": "E39",
+          "query": "出差打车报销需要什么材料？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "行程单",
+            "发票"
+          ],
+          "expected_terms": [
+            "行程单",
+            "发票"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 14.918800035957247,
+          "semantic_ms": 14.127300004474819,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E40",
+          "query": "敏感个人信息包括哪些内容？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "expected_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.87990000937134,
+          "semantic_ms": 16.139500017743558,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E41",
+          "query": "高风险供应商准入前要做什么尽调？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "现场或远程深度尽调"
+          ],
+          "expected_terms": [
+            "现场或远程深度尽调"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.894200012553483,
+          "semantic_ms": 15.080999990459532,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E42",
+          "query": "商业招待可以去私人会所吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得"
+          ],
+          "expected_terms": [
+            "不得"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 15.369600034318864,
+          "semantic_ms": 14.569299994036555,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E43",
+          "query": "居家办公可以使用家庭网络吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "家庭私有网络"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 16.612199950031936,
+          "semantic_ms": 15.878800011705607,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E44",
+          "query": "公司电脑丢失怎么处理？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "DAT-002",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 16.683600028045475,
+          "semantic_ms": 15.956299961544573,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E45",
+          "query": "酒店费最多报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 15.719300019554794,
+          "semantic_ms": 14.848200022242963,
+          "rerank_ms": 0.000700005330145359
+        },
+        {
+          "id": "E46",
+          "query": "资料传到海外要经过什么流程？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "SEC-004",
+            "TRV-001",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [],
+          "expected_terms": [
+            "数据合规委员会"
+          ],
+          "refused": true,
+          "should_refuse": false,
+          "passed": false,
+          "latency_ms": 15.446199977304786,
+          "semantic_ms": 14.657999970950186,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E47",
+          "query": "员工可以带宠物上班吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005",
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 16.88710000598803,
+          "semantic_ms": 16.072899976279587,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E48",
+          "query": "公司可以给员工发放股票期权吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "GFT-003",
+            "REM-007",
+            "CTR-008",
+            "SEC-004"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 18.083400034811348,
+          "semantic_ms": 17.196800035890192,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E49",
+          "query": "办公室可以安装人脸识别考勤吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "GFT-003",
+            "WHL-006"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 17.275999998673797,
+          "semantic_ms": 16.5127000072971,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E50",
+          "query": "员工可以申请六个月无薪假吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "TRV-001",
+            "WHL-006"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.072899986989796,
+          "semantic_ms": 14.222700032405555,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E51",
+          "query": "食堂供应商需要提供清真认证吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.626200009137392,
+          "semantic_ms": 14.694400015287101,
+          "rerank_ms": 0.000100000761449337
+        },
+        {
+          "id": "E52",
+          "query": "员工可以报销健身房会员费吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.074099996127188,
+          "semantic_ms": 14.344199968036264,
+          "rerank_ms": 0.000200001522898674
+        },
+        {
+          "id": "E53",
+          "query": "公司可以组织出境团建吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "DAT-002",
+            "TRV-001",
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.087799984030426,
+          "semantic_ms": 14.360499975737184,
+          "rerank_ms": 0.000300002284348011
+        },
+        {
+          "id": "E54",
+          "query": "员工每月最多加班多少小时？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 15.028299996629357,
+          "semantic_ms": 14.269900042563677,
+          "rerank_ms": 0.000300002284348011
+        }
+      ]
+    },
+    "hybrid": {
+      "mode": "hybrid",
+      "total": 54,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0,
+      "mrr": 0.9886363636363636,
+      "citation_accuracy": 1.0,
+      "refusal_accuracy": 1.0,
+      "average_latency_ms": 997.4533166656598,
+      "average_semantic_ms": 10.524288885924896,
+      "average_rerank_ms": 986.0239833317421,
+      "embedding_build_ms": 8.801000018138438,
+      "estimated_cost_usd": 0.0,
+      "semantic_enabled": true,
+      "rerank_enabled": true,
+      "passed": 54,
+      "rows": [
+        {
+          "id": "E01",
+          "query": "上海出差普通员工住宿每晚上限是多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1182.6341999694705,
+          "semantic_ms": 8.024799986742437,
+          "rerank_ms": 1173.7583999638446
+        },
+        {
+          "id": "E02",
+          "query": "客户送2000元购物卡可以收吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "expected_terms": [
+            "购物卡",
+            "不得收受"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1096.4222999755293,
+          "semantic_ms": 19.135700014885515,
+          "rerank_ms": 1076.1754999984987
+        },
+        {
+          "id": "E03",
+          "query": "把个人信息传到境外需要哪些审批？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "CTR-008",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "expected_terms": [
+            "数据合规委员会",
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1038.5827000136487,
+          "semantic_ms": 8.365900022909045,
+          "rerank_ms": 1029.3131000362337
+        },
+        {
+          "id": "E04",
+          "query": "发现疑似数据泄露后多久要报告？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "REM-007",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30分钟"
+          ],
+          "expected_terms": [
+            "30分钟"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 924.9173999996856,
+          "semantic_ms": 8.427599968854338,
+          "rerank_ms": 915.683800005354
+        },
+        {
+          "id": "E05",
+          "query": "高风险供应商多久复核一次？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "12个月"
+          ],
+          "expected_terms": [
+            "12个月"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 875.1141999964602,
+          "semantic_ms": 8.666399982757866,
+          "rerank_ms": 865.6475000316277
+        },
+        {
+          "id": "E06",
+          "query": "匿名举报人的身份会被公开吗？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "严格保密"
+          ],
+          "expected_terms": [
+            "严格保密"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 932.0538999745622,
+          "semantic_ms": 15.27239999268204,
+          "rerank_ms": 915.8528000116348
+        },
+        {
+          "id": "E07",
+          "query": "在家办公能直接连接公共Wi-Fi吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "VPN"
+          ],
+          "expected_terms": [
+            "VPN"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 890.2749999542721,
+          "semantic_ms": 8.688699977938086,
+          "rerank_ms": 880.700700043235
+        },
+        {
+          "id": "E08",
+          "query": "非标准合同需要提前多久提交法务审核？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1021.2586999987252,
+          "semantic_ms": 8.88959999429062,
+          "rerank_ms": 1011.3417999818921
+        },
+        {
+          "id": "E09",
+          "query": "旧版差旅制度里深圳住宿标准是多少？",
+          "expected_docs": [
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "500元"
+          ],
+          "expected_terms": [
+            "500元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1214.2595000332221,
+          "semantic_ms": 8.783800003584474,
+          "rerank_ms": 1204.5810000272468
+        },
+        {
+          "id": "E10",
+          "query": "差旅新规相比旧规，住宿标准有什么变化？",
+          "expected_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "TRV-001-OLD"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元",
+            "500元"
+          ],
+          "expected_terms": [
+            "600元",
+            "500元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1121.3922000024468,
+          "semantic_ms": 16.990599979180843,
+          "rerank_ms": 1103.1591000501066
+        },
+        {
+          "id": "E11",
+          "query": "公司可以报销宠物保险吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1151.8771999981254,
+          "semantic_ms": 9.483899979386479,
+          "rerank_ms": 1141.2021999713033
+        },
+        {
+          "id": "E12",
+          "query": "员工年会在温泉酒店举办需要什么审批？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001",
+            "CTR-008"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1118.2330999872647,
+          "semantic_ms": 9.195500053465366,
+          "rerank_ms": 1108.1095999688841
+        },
+        {
+          "id": "E13",
+          "query": "员工去北京出差，普通员工住宿一晚最多能报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1076.3462000177242,
+          "semantic_ms": 8.337399980518967,
+          "rerank_ms": 1066.9775999849662
+        },
+        {
+          "id": "E14",
+          "query": "出差坐飞机可以坐公务舱吗？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5小时"
+          ],
+          "expected_terms": [
+            "5小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1112.862000009045,
+          "semantic_ms": 8.431599999312311,
+          "rerank_ms": 1103.6770000355318
+        },
+        {
+          "id": "E15",
+          "query": "境外出差需要提前几天申请？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "REM-007",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1330.926000024192,
+          "semantic_ms": 8.537199988495559,
+          "rerank_ms": 1321.5883999946527
+        },
+        {
+          "id": "E16",
+          "query": "差旅结束多久内必须提交报销？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "15个工作日"
+          ],
+          "expected_terms": [
+            "15个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1140.786300005857,
+          "semantic_ms": 9.324499987997115,
+          "rerank_ms": 1130.5016999831423
+        },
+        {
+          "id": "E17",
+          "query": "L4核心数据可以放在个人网盘吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得存储"
+          ],
+          "expected_terms": [
+            "不得存储"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 921.4855000027455,
+          "semantic_ms": 15.190100006293505,
+          "rerank_ms": 905.3881000145338
+        },
+        {
+          "id": "E18",
+          "query": "收集身份证号需要单独同意吗？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "WHL-006",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "单独同意"
+          ],
+          "expected_terms": [
+            "单独同意"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 929.375900013838,
+          "semantic_ms": 7.881300000008196,
+          "rerank_ms": 920.7577999914065
+        },
+        {
+          "id": "E19",
+          "query": "客户数据能否用于供应商训练模型？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "模型训练"
+          ],
+          "expected_terms": [
+            "模型训练"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 907.7748999698088,
+          "semantic_ms": 8.202800003346056,
+          "rerank_ms": 898.735900002066
+        },
+        {
+          "id": "E20",
+          "query": "高权限账号多久复核一次？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "VND-005",
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "每季度"
+          ],
+          "expected_terms": [
+            "每季度"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 892.4780000234023,
+          "semantic_ms": 9.384899982251227,
+          "rerank_ms": 882.3513999814168
+        },
+        {
+          "id": "E21",
+          "query": "收到超过200元的非现金礼品怎么办？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "登记"
+          ],
+          "expected_terms": [
+            "登记"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1114.9849999928847,
+          "semantic_ms": 14.781100035179406,
+          "rerank_ms": 1099.0023000049405
+        },
+        {
+          "id": "E22",
+          "query": "客户请吃饭人均超过500元需要谁批准？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "CTR-008",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "商业道德办公室"
+          ],
+          "expected_terms": [
+            "商业道德办公室"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1099.4493000325747,
+          "semantic_ms": 7.822000014130026,
+          "rerank_ms": 1090.7488000229932
+        },
+        {
+          "id": "E23",
+          "query": "近亲属在供应商任职多久内申报？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 966.3592000142671,
+          "semantic_ms": 9.005600004456937,
+          "rerank_ms": 956.6124999546446
+        },
+        {
+          "id": "E24",
+          "query": "生产数据库被勒索属于什么等级事件？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002",
+            "WHL-006"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "重大"
+          ],
+          "expected_terms": [
+            "重大"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 917.0134000014514,
+          "semantic_ms": 8.830800012219697,
+          "rerank_ms": 907.3093000333756
+        },
+        {
+          "id": "E25",
+          "query": "数据泄露后可以自己联系客户说明吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得自行联系"
+          ],
+          "expected_terms": [
+            "不得自行联系"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 912.7307000453584,
+          "semantic_ms": 9.102699987124652,
+          "rerank_ms": 902.7907000272535
+        },
+        {
+          "id": "E26",
+          "query": "安全事件处置时可以删除日志吗？",
+          "expected_docs": [
+            "SEC-004"
+          ],
+          "retrieved_docs": [
+            "SEC-004",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得擅自关闭日志"
+          ],
+          "expected_terms": [
+            "不得擅自关闭日志"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 801.5819999855012,
+          "semantic_ms": 8.672600029967725,
+          "rerank_ms": 791.8843000079505
+        },
+        {
+          "id": "E27",
+          "query": "供应商合同必须包含哪些合规条款？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "expected_terms": [
+            "反腐败",
+            "审计权"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 978.6808000062592,
+          "semantic_ms": 8.527699974365532,
+          "rerank_ms": 969.2497000214644
+        },
+        {
+          "id": "E28",
+          "query": "采购人员能接受供应商旅游安排吗？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "旅游"
+          ],
+          "expected_terms": [
+            "旅游"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 906.0367000056431,
+          "semantic_ms": 8.885700022801757,
+          "rerank_ms": 896.0123999859206
+        },
+        {
+          "id": "E29",
+          "query": "供应商股权发生变化后多久复核？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "GFT-003",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "10个工作日"
+          ],
+          "expected_terms": [
+            "10个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1101.335699961055,
+          "semantic_ms": 8.552699990104884,
+          "rerank_ms": 1091.8880999670364
+        },
+        {
+          "id": "E30",
+          "query": "匿名举报需要提供哪些材料？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "DAT-002",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "时间",
+            "地点"
+          ],
+          "expected_terms": [
+            "时间",
+            "地点"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 927.0154999685474,
+          "semantic_ms": 16.33929996751249,
+          "rerank_ms": 909.8099999828264
+        },
+        {
+          "id": "E31",
+          "query": "举报调查一般多久完成？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "30个工作日"
+          ],
+          "expected_terms": [
+            "30个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 908.4183000377379,
+          "semantic_ms": 9.514499979559332,
+          "rerank_ms": 897.9405999998562
+        },
+        {
+          "id": "E32",
+          "query": "涉及高级管理人员的举报由谁处理？",
+          "expected_docs": [
+            "WHL-006"
+          ],
+          "retrieved_docs": [
+            "WHL-006",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "审计委员会"
+          ],
+          "expected_terms": [
+            "审计委员会"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1166.3860999979079,
+          "semantic_ms": 10.39779995335266,
+          "rerank_ms": 1154.880799993407
+        },
+        {
+          "id": "E33",
+          "query": "员工每月可以远程办公几天？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "8个"
+          ],
+          "expected_terms": [
+            "8个"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1082.5758000137284,
+          "semantic_ms": 9.052200010046363,
+          "rerank_ms": 1072.7499999920838
+        },
+        {
+          "id": "E34",
+          "query": "在家能打印核心数据吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "禁止"
+          ],
+          "expected_terms": [
+            "禁止"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 889.2847999813966,
+          "semantic_ms": 14.280300005339086,
+          "rerank_ms": 874.1925999638624
+        },
+        {
+          "id": "E35",
+          "query": "远程办公电脑丢失多久报告？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 915.6110999756493,
+          "semantic_ms": 15.537099970970303,
+          "rerank_ms": 899.0936999907717
+        },
+        {
+          "id": "E36",
+          "query": "非标准合同法务多久反馈审核意见？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "3个工作日"
+          ],
+          "expected_terms": [
+            "3个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 951.5809999429621,
+          "semantic_ms": 9.801900014281273,
+          "rerank_ms": 940.3964999946766
+        },
+        {
+          "id": "E37",
+          "query": "合同签完后多久归档？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "GFT-003"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "5个工作日"
+          ],
+          "expected_terms": [
+            "5个工作日"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 885.7581000193022,
+          "semantic_ms": 8.541499963030219,
+          "rerank_ms": 876.4435999910347
+        },
+        {
+          "id": "E38",
+          "query": "空白合同可以盖章吗？",
+          "expected_docs": [
+            "CTR-008"
+          ],
+          "retrieved_docs": [
+            "CTR-008",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "严禁"
+          ],
+          "expected_terms": [
+            "严禁"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 998.614699987229,
+          "semantic_ms": 15.470000042114407,
+          "rerank_ms": 982.3803000035696
+        },
+        {
+          "id": "E39",
+          "query": "出差打车报销需要什么材料？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "行程单",
+            "发票"
+          ],
+          "expected_terms": [
+            "行程单",
+            "发票"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1056.938200024888,
+          "semantic_ms": 8.000299974810332,
+          "rerank_ms": 1048.0491999769583
+        },
+        {
+          "id": "E40",
+          "query": "敏感个人信息包括哪些内容？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "SEC-004"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "expected_terms": [
+            "生物识别",
+            "金融账户"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 894.4704000023194,
+          "semantic_ms": 9.354299982078373,
+          "rerank_ms": 884.0341999894008
+        },
+        {
+          "id": "E41",
+          "query": "高风险供应商准入前要做什么尽调？",
+          "expected_docs": [
+            "VND-005"
+          ],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "现场或远程深度尽调"
+          ],
+          "expected_terms": [
+            "现场或远程深度尽调"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 999.9716999591328,
+          "semantic_ms": 8.839500020258129,
+          "rerank_ms": 990.2669999864884
+        },
+        {
+          "id": "E42",
+          "query": "商业招待可以去私人会所吗？",
+          "expected_docs": [
+            "GFT-003"
+          ],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "不得"
+          ],
+          "expected_terms": [
+            "不得"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1060.5313000269234,
+          "semantic_ms": 8.42430000193417,
+          "rerank_ms": 1051.2230999884196
+        },
+        {
+          "id": "E43",
+          "query": "居家办公可以使用家庭网络吗？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "家庭私有网络"
+          ],
+          "expected_terms": [
+            "家庭私有网络"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1105.0210000248626,
+          "semantic_ms": 17.901599989272654,
+          "rerank_ms": 1086.0432999907061
+        },
+        {
+          "id": "E44",
+          "query": "公司电脑丢失怎么处理？",
+          "expected_docs": [
+            "REM-007"
+          ],
+          "retrieved_docs": [
+            "REM-007",
+            "SEC-004",
+            "GFT-003",
+            "DAT-002"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "1小时"
+          ],
+          "expected_terms": [
+            "1小时"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 970.9280999959446,
+          "semantic_ms": 14.849599974695593,
+          "rerank_ms": 955.329000018537
+        },
+        {
+          "id": "E45",
+          "query": "酒店费最多报多少？",
+          "expected_docs": [
+            "TRV-001"
+          ],
+          "retrieved_docs": [
+            "TRV-001",
+            "GFT-003",
+            "REM-007"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "600元"
+          ],
+          "expected_terms": [
+            "600元"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 12.143500032834709,
+          "semantic_ms": 11.308800021652132,
+          "rerank_ms": 0.05069997860118747
+        },
+        {
+          "id": "E46",
+          "query": "资料传到海外要经过什么流程？",
+          "expected_docs": [
+            "DAT-002"
+          ],
+          "retrieved_docs": [
+            "DAT-002",
+            "CTR-008"
+          ],
+          "retrieval_hit": true,
+          "retrieval_hit_at_3": true,
+          "citation_terms": [
+            "数据合规委员会"
+          ],
+          "expected_terms": [
+            "数据合规委员会"
+          ],
+          "refused": false,
+          "should_refuse": false,
+          "passed": true,
+          "latency_ms": 1136.2235000124201,
+          "semantic_ms": 22.273299982771277,
+          "rerank_ms": 1113.1072000134736
+        },
+        {
+          "id": "E47",
+          "query": "员工可以带宠物上班吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "GFT-003",
+            "VND-005",
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1093.7391999759711,
+          "semantic_ms": 8.521099982317537,
+          "rerank_ms": 1084.5103000174277
+        },
+        {
+          "id": "E48",
+          "query": "公司可以给员工发放股票期权吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "GFT-003",
+            "REM-007",
+            "CTR-008"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 939.7907999809831,
+          "semantic_ms": 8.347700000740588,
+          "rerank_ms": 930.6596000096761
+        },
+        {
+          "id": "E49",
+          "query": "办公室可以安装人脸识别考勤吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "WHL-006",
+            "GFT-003",
+            "REM-007"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 891.5842999704182,
+          "semantic_ms": 8.629399992059916,
+          "rerank_ms": 882.1489999536425
+        },
+        {
+          "id": "E50",
+          "query": "员工可以申请六个月无薪假吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001",
+            "REM-007",
+            "GFT-003"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1132.059899973683,
+          "semantic_ms": 8.098300022538751,
+          "rerank_ms": 1123.1415999936871
+        },
+        {
+          "id": "E51",
+          "query": "食堂供应商需要提供清真认证吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "VND-005",
+            "DAT-002"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 901.7220000387169,
+          "semantic_ms": 8.32520000403747,
+          "rerank_ms": 892.5305000157095
+        },
+        {
+          "id": "E52",
+          "query": "员工可以报销健身房会员费吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "TRV-001"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1136.819600011222,
+          "semantic_ms": 9.127700002864003,
+          "rerank_ms": 1126.903800002765
+        },
+        {
+          "id": "E53",
+          "query": "公司可以组织出境团建吗？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "DAT-002",
+            "TRV-001",
+            "GFT-003",
+            "CTR-008"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1046.3579999632202,
+          "semantic_ms": 9.125299984589219,
+          "rerank_ms": 1036.4070999785326
+        },
+        {
+          "id": "E54",
+          "query": "员工每月最多加班多少小时？",
+          "expected_docs": [],
+          "retrieved_docs": [
+            "REM-007",
+            "TRV-001",
+            "SEC-004"
+          ],
+          "retrieval_hit": false,
+          "retrieval_hit_at_3": false,
+          "citation_terms": [],
+          "expected_terms": [],
+          "refused": true,
+          "should_refuse": true,
+          "passed": true,
+          "latency_ms": 1081.7042000126094,
+          "semantic_ms": 8.855000021867454,
+          "rerank_ms": 1071.999899984803
+        }
+      ]
+    }
+  },
+  "models": {
+    "embedding": {
+      "name": "bge-small-zh-v1.5",
+      "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-11-11\\wo-x\\outputs\\compliance-rag-fastapi\\models\\bge-small-zh-v1.5",
+      "loaded": true,
+      "available": true,
+      "dimensions": 512,
+      "device": "cpu",
+      "vram_mb": 0,
+      "model_size_mb": 91.4,
+      "error": null
+    },
+    "reranker": {
+      "name": "bge-reranker-base",
+      "path": "C:\\Users\\Lenovo\\Documents\\Codex\\2026-11-11\\wo-x\\outputs\\compliance-rag-fastapi\\models\\bge-reranker-base",
+      "loaded": true,
+      "available": true,
+      "device": "cpu",
+      "vram_mb": 0,
+      "model_size_mb": 1060.7,
+      "error": null
+    },
+    "process_rss_mb": null,
+    "estimated_loaded_model_mb": 1152.1,
+    "estimated_cost_usd": 0.0
+  }
+}
