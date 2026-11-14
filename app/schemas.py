@@ -7,14 +7,14 @@ from pydantic import BaseModel, Field, field_validator
 
 
 SearchScope = Literal["current", "all"]
-RetrievalMode = Literal["keyword", "vector", "hybrid"]
+RetrievalMode = Literal["keyword", "vector", "hybrid", "rerank"]
 
 
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=1000)
     scope: SearchScope = "current"
     department: str = Field(default="all", max_length=80)
-    mode: RetrievalMode = "hybrid"
+    mode: RetrievalMode = "rerank"
 
     @field_validator("question", "department")
     @classmethod
@@ -24,8 +24,9 @@ class ChatRequest(BaseModel):
 
 class EvaluationRequest(BaseModel):
     modes: list[RetrievalMode] = Field(
-        default_factory=lambda: ["keyword", "vector", "hybrid"]
+        default_factory=lambda: ["keyword", "vector", "hybrid", "rerank"]
     )
+    save_report: bool = True
 
 
 class DocumentCreateRequest(BaseModel):
@@ -42,3 +43,18 @@ class DocumentCreateRequest(BaseModel):
         if not value:
             raise ValueError("字段不能只包含空白字符")
         return value
+
+
+class FeedbackRequest(BaseModel):
+    request_id: str = Field(min_length=1, max_length=80)
+    helpful: bool
+    rating: int | None = Field(default=None, ge=1, le=5)
+    comment: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("comment")
+    @classmethod
+    def strip_comment(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None

@@ -17,6 +17,7 @@
     isComposing: false,
     evaluation: null,
     evaluationRunning: false,
+    latestReport: null,
     online: false
   };
 
@@ -24,7 +25,8 @@
   const modeLabels = {
     keyword: "关键词 BM25",
     vector: "BGE 语义向量",
-    hybrid: "混合检索"
+    hybrid: "混合检索",
+    rerank: "混合检索 + 重排"
   };
 
   function escapeHtml(value) {
@@ -106,6 +108,7 @@
       "statusFilter",
       "documentTableBody",
       "runEvaluation",
+      "evaluationReportLink",
       "evaluationTableBody",
       "uploadDialog",
       "uploadForm",
@@ -252,10 +255,16 @@
     });
     elements.conversation.addEventListener("click", (event) => {
       const citation = event.target.closest("[data-citation-index]");
-      if (!citation) return;
-      setEvidenceTab("sources");
-      selectEvidence(Number(citation.dataset.citationIndex));
-      openEvidence();
+      if (citation) {
+        setEvidenceTab("sources");
+        selectEvidence(Number(citation.dataset.citationIndex));
+        openEvidence();
+        return;
+      }
+      const feedbackButton = event.target.closest("[data-feedback]");
+      if (feedbackButton) {
+        void submitFeedback(feedbackButton);
+      }
     });
 
     document.querySelectorAll(".upload-trigger").forEach((button) => {
@@ -511,7 +520,7 @@
           question,
           scope: state.scope,
           department: state.department,
-          mode: "hybrid"
+          mode: "rerank"
         })
       });
       thinking.remove();
@@ -523,7 +532,7 @@
         score: result.score,
         coverage: result.coverage
       }));
-      renderAnswer(answer);
+      renderAnswer(answer, payload.request_id);
       renderEvidence();
     } catch (error) {
       thinking.remove();
@@ -575,7 +584,7 @@
     scrollBottom();
   }
 
-  function renderAnswer(answer) {
+  function renderAnswer(answer, requestId = null) {
     const block = document.createElement("div");
     block.className = "message";
     const now = new Date().toLocaleTimeString("zh-CN", {
@@ -653,11 +662,46 @@
                   .join("")}</div>`
               : ""
           }
+          ${
+            requestId
+              ? `<div class="feedback-row" data-feedback-row>
+                  <span>这个回答有帮助吗？</span>
+                  <button type="button" data-feedback="true" data-request-id="${escapeHtml(requestId)}">有帮助</button>
+                  <button type="button" data-feedback="false" data-request-id="${escapeHtml(requestId)}">需改进</button>
+                </div>`
+              : ""
+          }
         </div>
       </div>
     `;
     elements.conversation.appendChild(block);
     scrollBottom();
+  }
+
+  async function submitFeedback(button) {
+    const row = button.closest("[data-feedback-row]");
+    if (!row || row.dataset.submitted === "true") return;
+    row.dataset.submitted = "true";
+    row.querySelectorAll("button").forEach((item) => {
+      item.disabled = true;
+    });
+    try {
+      await api("/api/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          request_id: button.dataset.requestId,
+          helpful: button.dataset.feedback === "true"
+        })
+      });
+      row.querySelector("span").textContent = "感谢反馈";
+      showToast("反馈已记录");
+    } catch (error) {
+      row.dataset.submitted = "false";
+      row.querySelectorAll("button").forEach((item) => {
+        item.disabled = false;
+      });
+      showToast(`反馈提交失败：${error.message}`, true);
+    }
   }
 
   function scrollBottom() {
@@ -885,14 +929,15 @@
       const payload = await api("/api/evaluate", {
         method: "POST",
         body: JSON.stringify({
-          modes: ["keyword", "vector", "hybrid"]
+          modes: ["keyword", "vector", "hybrid", "rerank"]
         })
       });
       state.evaluation = payload.results;
+      state.latestReport = payload;
       renderEvaluation(payload.results);
       if (notify) {
-        const hybrid = payload.results.hybrid;
-        showToast(`评测完成 · 混合检索通过 ${hybrid.passed}/${hybrid.total}`);
+        const rerank = payload.results.rerank;
+        showToast(`评测完成 · 重排模式通过 ${rerank.passed}/${rerank.total}`);
       }
     } catch (error) {
       elements.evaluationTableBody.innerHTML =
@@ -913,7 +958,7 @@
       document.querySelector(`[data-mrr="${mode}"]`).textContent =
         Number(result.mrr).toFixed(2);
     });
-    elements.evaluationTableBody.innerHTML = results.hybrid.rows
+    elements.evaluationTableBody.innerHTML = results.rerank.rows
       .map(
         (row) => `
           <tr>
@@ -945,6 +990,14 @@
         `
       )
       .join("");
+    const report = state.latestReport;
+    if (report?.report_id) {
+      elements.evaluationReportLink.hidden = false;
+      elements.evaluationReportLink.href =
+        `/api/evaluation/reports/${encodeURIComponent(report.report_id)}/markdown`;
+      elements.evaluationReportLink.textContent =
+        `下载评测报告 · ${report.report_id}`;
+    }
   }
 
   function showToast(message, isError = false) {

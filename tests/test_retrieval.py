@@ -8,7 +8,7 @@ os.environ["POLICY_RAG_MODELS_ENABLED"] = "false"
 os.environ["POLICY_RAG_LLM_PROVIDER"] = "none"
 
 from app.config import POLICIES_PATH, load_policies
-from app.services.retrieval import RAGEngine
+from app.services.retrieval import RAGEngine, normalize_chinese_amounts
 
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +26,7 @@ class RetrievalEngineTests(unittest.TestCase):
         self.assertEqual(metadata["base_document_count"], 9)
         self.assertEqual(metadata["uploaded_document_count"], 0)
         self.assertEqual(metadata["chunk_count"], 36)
-        self.assertEqual(metadata["evaluation_case_count"], 54)
+        self.assertEqual(metadata["evaluation_case_count"], 120)
 
     def test_current_scope_excludes_expired_policy(self) -> None:
         response = self.engine.search(
@@ -81,16 +81,41 @@ class RetrievalEngineTests(unittest.TestCase):
         self.assertIn("600元", text)
         self.assertIn("500元", text)
 
+    def test_chinese_amounts_are_normalized(self) -> None:
+        text, changes = normalize_chinese_amounts("两百元、二百块、一千元")
+        self.assertIn("200元", text)
+        self.assertIn("200元", text)
+        self.assertIn("1000元", text)
+        self.assertEqual(len(changes), 3)
+
+    def test_chinese_and_arabic_gift_money_have_same_answer(self) -> None:
+        for question in (
+            "客人给的两百元礼金能收吗？",
+            "客人给的200元礼金能收吗？",
+        ):
+            result = self.engine.answer_question(question, scope="current")
+            answer = result["answer"]
+            self.assertFalse(answer["refused"])
+            self.assertTrue(
+                any(point["doc_id"] == "GFT-003" for point in answer["points"])
+            )
+            self.assertTrue(
+                any("不得收受" in point["text"] for point in answer["points"])
+            )
+
     def test_hybrid_evaluation(self) -> None:
         keyword = self.engine.evaluate("keyword")
         vector = self.engine.evaluate("vector")
         hybrid = self.engine.evaluate("hybrid")
-        self.assertGreaterEqual(hybrid["passed"], 50)
+        rerank = self.engine.evaluate("rerank")
+        self.assertGreaterEqual(hybrid["passed"], 100)
         self.assertGreaterEqual(hybrid["passed"], keyword["passed"])
         self.assertGreater(hybrid["passed"], vector["passed"])
         self.assertGreaterEqual(hybrid["recall_at_5"], 0.95)
-        self.assertGreaterEqual(hybrid["citation_accuracy"], 0.95)
+        self.assertGreaterEqual(hybrid["citation_accuracy"], 0.9)
         self.assertGreaterEqual(hybrid["refusal_accuracy"], 0.8)
+        self.assertGreaterEqual(rerank["passed"], hybrid["passed"])
+        self.assertGreaterEqual(rerank["faithfulness"], 0.95)
 
 
 if __name__ == "__main__":

@@ -158,7 +158,7 @@ class RepositoryTests(unittest.TestCase):
             stats = repository.stats()
             preserved = repository.get_document("UPL-TEST-001")
 
-            self.assertEqual(stats["schema_version"], 3)
+            self.assertEqual(stats["schema_version"], 4)
             self.assertEqual(stats["builtin_count"], 9)
             self.assertEqual(stats["uploaded_count"], 1)
             self.assertEqual(stats["document_count"], 10)
@@ -233,6 +233,38 @@ class RepositoryTests(unittest.TestCase):
             )
             self.assertIn("TRV-001-1-1", hits)
             self.assertGreater(hits["TRV-001-1-1"], 0.99)
+
+    def test_feedback_statistics(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository = PolicyRepository(
+                Path(temporary_directory) / "feedback.sqlite3"
+            )
+            repository.save_feedback(
+                {
+                    "request_id": "request-1",
+                    "helpful": True,
+                    "rating": 5,
+                    "comment": "clear",
+                    "question": "question",
+                    "answer_mode": "extractive",
+                    "model": "none",
+                }
+            )
+            repository.save_feedback(
+                {
+                    "request_id": "request-2",
+                    "helpful": False,
+                    "rating": 2,
+                    "comment": "missing",
+                    "question": "question",
+                    "answer_mode": "fallback",
+                    "model": "qwen-plus",
+                }
+            )
+            stats = repository.feedback_stats()
+            self.assertEqual(stats["total"], 2)
+            self.assertEqual(stats["helpful_rate"], 0.5)
+            self.assertEqual(stats["average_rating"], 3.5)
 
     def test_index_manager_supports_refresh_and_removal(self) -> None:
         policies = load_test_policies()

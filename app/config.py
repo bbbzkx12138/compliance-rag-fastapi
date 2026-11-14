@@ -56,8 +56,12 @@ POLICIES_PATH = DATA_DIR / "policies.json"
 DATABASE_PATH = _env_path(
     "POLICY_RAG_DB", PROJECT_DIR / "storage" / "policy_rag.sqlite3"
 )
+EVALUATION_REPORTS_DIR = _env_path(
+    "POLICY_RAG_EVAL_REPORTS",
+    PROJECT_DIR / "storage" / "evaluation_reports",
+)
 APP_NAME = "规镜 PolicyLens"
-APP_VERSION = "2.3.0"
+APP_VERSION = "2.4.0"
 APP_ENV = os.environ.get("POLICY_RAG_ENV", "development")
 APP_HOST = os.environ.get("POLICY_RAG_HOST", "127.0.0.1")
 APP_PORT = _env_int("POLICY_RAG_PORT", 8000)
@@ -106,6 +110,16 @@ LLM_OUTPUT_COST_PER_MILLION = float(
     os.environ.get("POLICY_RAG_LLM_OUTPUT_COST_PER_MILLION", "0")
 )
 LLM_COST_CURRENCY = os.environ.get("POLICY_RAG_LLM_COST_CURRENCY", "CNY")
+EVAL_MIN_RECALL_AT_5 = float(os.environ.get("POLICY_RAG_EVAL_MIN_RECALL_5", "0.9"))
+EVAL_MIN_CITATION_ACCURACY = float(
+    os.environ.get("POLICY_RAG_EVAL_MIN_CITATION", "0.9")
+)
+EVAL_MIN_REFUSAL_ACCURACY = float(
+    os.environ.get("POLICY_RAG_EVAL_MIN_REFUSAL", "0.95")
+)
+EVAL_MIN_FAITHFULNESS = float(
+    os.environ.get("POLICY_RAG_EVAL_MIN_FAITHFULNESS", "0.95")
+)
 
 
 def load_policies(path: Path = POLICIES_PATH) -> dict[str, Any]:
@@ -121,5 +135,16 @@ def load_policies(path: Path = POLICIES_PATH) -> dict[str, Any]:
         }
         policies.setdefault("evaluation_cases", []).extend(
             item for item in extended_cases if item["id"] not in existing_ids
+        )
+    phase4_cases_path = path.with_name("evaluation_cases_phase4.json")
+    if phase4_cases_path.exists():
+        phase4_cases = json.loads(
+            phase4_cases_path.read_text(encoding="utf-8")
+        )
+        existing_ids = {
+            item["id"] for item in policies.get("evaluation_cases", [])
+        }
+        policies.setdefault("evaluation_cases", []).extend(
+            item for item in phase4_cases if item["id"] not in existing_ids
         )
     return policies

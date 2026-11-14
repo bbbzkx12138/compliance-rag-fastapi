@@ -277,7 +277,7 @@
           </header>
           <div class="note">
             <svg><use href="#i-check"></use></svg>
-            <p><strong>54 个固定问题</strong>覆盖事实检索、改写查询、版本对比和 10 个无依据负例，全部指标由 Python 服务实时计算。</p>
+            <p><strong>120 个固定问题</strong>覆盖事实检索、改写查询、版本对比和 30 个无依据负例，全部指标由 Python 服务实时计算。</p>
           </div>
           <div class="metrics">
             <article>
@@ -290,16 +290,21 @@
               <strong data-pass="vector">--</strong><small>综合通过率</small>
               <footer>Recall@5 <b data-recall="vector">--</b> · MRR <b data-mrr="vector">--</b></footer>
             </article>
-            <article class="featured">
-              <div><span>混合检索</span><small>BM25 + vector + rerank</small></div>
+            <article>
+              <div><span>混合检索</span><small>BM25 + BGE + rewrite</small></div>
               <strong data-pass="hybrid">--</strong><small>综合通过率</small>
               <footer>Recall@5 <b data-recall="hybrid">--</b> · MRR <b data-mrr="hybrid">--</b></footer>
+            </article>
+            <article class="featured">
+              <div><span>混合检索 + 重排</span><small>+ Cross-Encoder</small></div>
+              <strong data-pass="rerank">--</strong><small>综合通过率</small>
+              <footer>Recall@5 <b data-recall="rerank">--</b> · MRR <b data-mrr="rerank">--</b></footer>
             </article>
           </div>
           <div class="evaluation-detail">
             <div class="detail-head">
               <div><p class="eyebrow">TEST CASES</p><h2>混合检索诊断</h2></div>
-              <span><i></i>逐题验证</span>
+              <a class="report-link" id="evaluationReportLink" href="#" target="_blank" hidden>下载评测报告</a>
             </div>
             <div class="eval-table">
               <table>

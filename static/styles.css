@@ -1029,6 +1029,38 @@ svg {
   margin-top: 10px;
 }
 
+.feedback-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.feedback-row span {
+  margin-right: 2px;
+}
+
+.feedback-row button {
+  padding: 4px 7px;
+  color: var(--soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 7px;
+}
+
+.feedback-row button:hover {
+  color: var(--green);
+  border-color: rgba(28, 91, 77, 0.3);
+}
+
+.feedback-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .source-pill {
   display: inline-flex;
   align-items: center;
@@ -1754,7 +1786,7 @@ tbody tr:hover {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 9px;
   padding: 13px clamp(22px, 3vw, 42px) 0;
 }
@@ -1848,6 +1880,17 @@ tbody tr:hover {
   gap: 5px;
   color: var(--muted);
   font-size: 7px;
+}
+
+.report-link {
+  color: var(--green);
+  font-size: 8px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.report-link:hover {
+  text-decoration: underline;
 }
 
 .detail-head > span i {

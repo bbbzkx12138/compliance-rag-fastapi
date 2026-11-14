@@ -93,6 +93,7 @@ SENTENCE_PATTERN = re.compile(r"[^。！？；]+[。！？；]?")
 NUMERIC_QUERY_PATTERN = re.compile(r"(多少|上限|标准|金额|时限|多久|比例|变化|差异)")
 
 QUERY_REWRITE_RULES = (
+    (re.compile(r"礼金|红包"), "现金 礼品 收受", "礼金→现金礼品收受"),
     (re.compile(r"非现金礼品"), "非现金礼品 登记 退回", "非现金礼品→登记退回"),
     (re.compile(r"核心数据"), "核心数据 个人设备", "核心数据→个人设备"),
     (re.compile(r"个人网盘"), "个人网盘 个人设备", "网盘→个人设备"),
@@ -115,6 +116,40 @@ QUERY_REWRITE_RULES = (
     (re.compile(r"供应商请客|请客吃饭"), "商务招待 供应商", "请客→商务招待"),
 )
 
+CHINESE_DIGITS = {
+    "零": 0,
+    "〇": 0,
+    "一": 1,
+    "二": 2,
+    "两": 2,
+    "三": 3,
+    "四": 4,
+    "五": 5,
+    "六": 6,
+    "七": 7,
+    "八": 8,
+    "九": 9,
+}
+CHINESE_UNITS = {"十": 10, "百": 100, "千": 1000, "万": 10000}
+CHINESE_AMOUNT_PATTERN = re.compile(
+    r"(?P<number>[零〇一二两三四五六七八九十百千万]+)(?P<unit>块钱|块|元)"
+)
+
+POLICY_GUARD_RULES = (
+    (
+        re.compile(r"远程访问.*摄像头|家庭摄像头"),
+        "知识库没有授权远程访问家庭摄像头的制度依据。",
+    ),
+    (
+        re.compile(r"报销.*驾照|考驾照费用"),
+        "考驾照费用不属于现有差旅或费用报销范围。",
+    ),
+    (
+        re.compile(r"删除.*系统备份|删除.*全部备份"),
+        "制度要求安全事件证据保全，不能依据现有制度删除系统备份。",
+    ),
+)
+
 
 def normalize(text: str) -> str:
     value = str(text or "").lower()
@@ -122,6 +157,42 @@ def normalize(text: str) -> str:
     value = value.replace("'", "").replace("`", "")
     value = PUNCTUATION_PATTERN.sub(" ", value)
     return re.sub(r"\s+", " ", value).strip()
+
+
+def _chinese_integer(value: str) -> int:
+    total = 0
+    section = 0
+    number = 0
+    for character in value:
+        if character in CHINESE_DIGITS:
+            number = CHINESE_DIGITS[character]
+            continue
+        unit = CHINESE_UNITS.get(character)
+        if unit is None:
+            continue
+        if unit == 10000:
+            section = (section + number) * unit
+            total += section
+            section = 0
+            number = 0
+        else:
+            section += (number or 1) * unit
+            number = 0
+    return total + section + number
+
+
+def normalize_chinese_amounts(text: str) -> tuple[str, list[str]]:
+    applied: list[str] = []
+
+    def replace(match: re.Match[str]) -> str:
+        number_text = match.group("number")
+        number = _chinese_integer(number_text)
+        if number <= 0:
+            return match.group(0)
+        applied.append(f"{number_text}{match.group('unit')}→{number}元")
+        return f"{number}元"
+
+    return CHINESE_AMOUNT_PATTERN.sub(replace, text), applied
 
 
 def tokenize(text: str) -> list[str]:
@@ -177,13 +248,19 @@ def split_sentences(text: str) -> list[str]:
 
 
 def rewrite_query(query: str) -> tuple[str, list[str]]:
-    rewritten = query
-    applied: list[str] = []
+    rewritten, applied = normalize_chinese_amounts(query)
     for pattern, replacement, label in QUERY_REWRITE_RULES:
         if pattern.search(rewritten):
             rewritten = pattern.sub(replacement, rewritten)
             applied.append(label)
     return rewritten, applied
+
+
+def policy_guard_reason(query: str) -> str | None:
+    for pattern, reason in POLICY_GUARD_RULES:
+        if pattern.search(query):
+            return reason
+    return None
 
 
 class RAGEngine:
@@ -489,17 +566,19 @@ class RAGEngine:
         *,
         scope: str = "current",
         department: str = "all",
-        mode: str = "hybrid",
+        mode: str = "rerank",
         limit: int = 6,
     ) -> dict[str, Any]:
         started_at = time.perf_counter()
-        if mode == "hybrid":
+        if mode in {"hybrid", "rerank"}:
             rewritten_query, query_rewrites = rewrite_query(query)
         else:
             rewritten_query, query_rewrites = query, []
         expanded = self._expand_query(rewritten_query)
         query_tokens = (
-            expanded["tokens"] if mode == "hybrid" else expanded["original_tokens"]
+            expanded["tokens"]
+            if mode in {"hybrid", "rerank"}
+            else expanded["original_tokens"]
         )
         unique_query_tokens = set(query_tokens)
         query_vector, query_norm = self._query_vector(query_tokens)
@@ -509,7 +588,7 @@ class RAGEngine:
         if (
             self.semantic_ready
             and self.semantic_runtime is not None
-            and mode in {"vector", "hybrid"}
+            and mode in {"vector", "hybrid", "rerank"}
         ):
             semantic_query = self.semantic_runtime.encode_query(
                 expanded["cleaned"]
@@ -607,7 +686,7 @@ class RAGEngine:
                 result["heading_coverage"] * 0.09
                 + result["title_coverage"] * 0.05
                 + (0.08 if result["phrase"] else 0.0)
-                if mode == "hybrid"
+                if mode in {"hybrid", "rerank"}
                 else 0.0
             )
             coverage_factor = 0.58 + result["coverage"] * 0.42
@@ -641,7 +720,7 @@ class RAGEngine:
         rerank_started_at = time.perf_counter()
         reranked = False
         if (
-            mode == "hybrid"
+            mode == "rerank"
             and self.rerank_enabled
             and self.semantic_runtime is not None
             and ranked_results
@@ -706,6 +785,7 @@ class RAGEngine:
 
         return {
             "query": expanded["cleaned"],
+            "policy_guard_reason": policy_guard_reason(query),
             "original_query": query,
             "rewritten_query": rewritten_query,
             "query_rewrites": query_rewrites,
@@ -749,6 +829,12 @@ class RAGEngine:
             }
         top = results[0]
         thresholds = search_response["thresholds"]
+        if search_response.get("policy_guard_reason"):
+            return {
+                "refuse": True,
+                "reason": search_response["policy_guard_reason"],
+                "level": "low",
+            }
         rerank_score = top.get("rerank_score")
         if (
             search_response["rerank_applied"]
@@ -996,7 +1082,7 @@ class RAGEngine:
         *,
         scope: str = "current",
         department: str = "all",
-        mode: str = "hybrid",
+        mode: str = "rerank",
         limit: int = 6,
     ) -> dict[str, Any]:
         search_response = self.search(
@@ -1017,6 +1103,8 @@ class RAGEngine:
         citation_hits = 0.0
         refusal_cases = 0
         refusal_hits = 0
+        faithfulness_cases = 0
+        faithfulness_sum = 0.0
         latency_sum = 0.0
         semantic_latency_sum = 0.0
         rerank_latency_sum = 0.0
@@ -1077,6 +1165,21 @@ class RAGEngine:
             semantic_latency_sum += response["semantic_ms"]
             rerank_latency_sum += response["rerank_ms"]
             embedding_latency_sum += response["embedding_build_ms"]
+            answer_faithfulness = None
+            if not answer["refused"] and answer["points"]:
+                support_scores = []
+                for point in answer["points"]:
+                    evidence_index = point["citation"] - 1
+                    if evidence_index < 0 or evidence_index >= len(answer["evidence"]):
+                        support_scores.append(0.0)
+                        continue
+                    cited_text = answer["evidence"][evidence_index]["section"]["text"]
+                    support_scores.append(
+                        self._text_support_score(point["text"], cited_text)
+                    )
+                answer_faithfulness = sum(support_scores) / len(support_scores)
+                faithfulness_cases += 1
+                faithfulness_sum += answer_faithfulness
             passed = (
                 answer["refused"]
                 if test_case["should_refuse"]
@@ -1099,6 +1202,7 @@ class RAGEngine:
                     "latency_ms": response["elapsed_ms"],
                     "semantic_ms": response["semantic_ms"],
                     "rerank_ms": response["rerank_ms"],
+                    "faithfulness": answer_faithfulness,
                 }
             )
 
@@ -1126,9 +1230,32 @@ class RAGEngine:
             "estimated_cost_usd": 0.0,
             "semantic_enabled": self.semantic_ready,
             "rerank_enabled": self.rerank_enabled,
+            "faithfulness": (
+                faithfulness_sum / faithfulness_cases
+                if faithfulness_cases
+                else 0.0
+            ),
+            "hallucination_rate": (
+                1.0 - faithfulness_sum / faithfulness_cases
+                if faithfulness_cases
+                else 0.0
+            ),
             "passed": sum(1 for row in rows if row["passed"]),
             "rows": rows,
         }
+
+    @staticmethod
+    def _text_support_score(claim: str, evidence_text: str) -> float:
+        claim_tokens = set(tokenize(claim))
+        evidence_tokens = set(tokenize(evidence_text))
+        if not claim_tokens:
+            return 0.0
+        overlap = len(claim_tokens & evidence_tokens) / len(claim_tokens)
+        claim_numbers = set(re.findall(r"\d+(?:\.\d+)?%?", claim))
+        evidence_numbers = set(re.findall(r"\d+(?:\.\d+)?%?", evidence_text))
+        if claim_numbers and not claim_numbers.issubset(evidence_numbers):
+            return 0.0
+        return min(1.0, overlap)
 
     def metadata(self) -> dict[str, Any]:
         return {

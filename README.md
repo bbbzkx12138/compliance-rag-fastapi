@@ -18,7 +18,7 @@
 - OpenAI-compatible LLM Provider
 - 原生 HTML / CSS / JavaScript
 
-项目使用本地 BGE 模型生成语义向量和 Cross-Encoder 重排结果，不调用外部大模型或 Embedding API。当前生成层仍使用可验证的抽取式回答。
+项目使用本地 BGE 模型生成语义向量和 Cross-Encoder 重排结果，并通过 OpenAI-compatible Provider 调用 LLM 组织带引用的回答；Provider 不可用时自动降级到抽取式回答。
 
 ## 功能
 
@@ -30,7 +30,7 @@
 - 部门元数据过滤。
 - 条款、页码、制度和版本级引用。
 - 证据不足时的明确拒答。
-- 54 题固定评测集，其中包含 10 个无依据负例。
+- 120 题固定评测集，其中包含 30 个无依据负例。
 - Markdown / TXT 文档导入。
 - SQLite 唯一数据源、基础制度幂等同步和自动迁移。
 - 索引版本管理、单文档刷新、全量重建和维护 CLI。
@@ -38,6 +38,9 @@
 - 模型状态、显存/模型体积、检索延迟和本地成本统计。
 - 通义千问 / OpenAI / Ollama 结构化 RAG 生成。
 - LLM 引用校验、二次证据检查、超时重试和自动降级。
+- 四路检索消融、忠实性评测、JSON/Markdown 历史报告。
+- JSON 与 Prometheus 指标、Request ID 请求追踪。
+- 答案反馈接口和 SQLite 反馈统计。
 - Swagger 文档：`/api/docs`。
 - Windows 一键启动脚本。
 
@@ -48,7 +51,7 @@
 - `data/policies.json` 只作为基础制度种子，不再直接进入检索。
 - 所有内置制度和 API 导入制度统一存入 SQLite。
 - 启动时根据内容哈希同步基础制度，未变化的制度不会重复写入。
-- 当前数据库结构版本为 `2`，旧版数据库会自动补齐字段。
+- 当前数据库结构版本为 `4`，旧版数据库会自动补齐字段和反馈表。
 - 索引由 `IndexManager` 统一管理，读请求和重建操作通过锁串行化。
 - 新增或删除文档时只重新切分目标文档，再重算 IDF 和向量。
 - 全量重建通过 `/api/index/rebuild` 或维护脚本执行。
@@ -61,15 +64,72 @@
 - 查询改写负责处理“酒店费→住宿标准”“资料传到海外→数据出境”等表达差异。
 - 长条款按标题、句子和 Markdown 段落切片，并保留页码与条款标题。
 
-当前本地 CPU 基准：
-
-| 检索模式 | 通过 | Recall@5 | 引用准确率 | 拒答准确率 | 平均延迟 |
-|---|---:|---:|---:|---:|---:|
-| BM25 | 45/54 | 95.5% | 81.8% | 90% | 0.6 ms |
-| BGE 向量 | 45/54 | 100% | 79.5% | 100% | 110 ms |
-| BM25 + BGE + Reranker | 54/54 | 100% | 100% | 100% | 约 1.04 秒 |
-
 模型体积约 1.15 GB，当前使用 CPU，显存占用为 0，单次检索 API 成本为 0 元。
+
+## 评测与监控
+
+评测集共 120 题，覆盖事实检索、同义改写、版本对比和 30 个无依据负例。
+
+四路消融：
+
+- `keyword`：BM25。
+- `vector`：BGE 语义向量。
+- `hybrid`：BM25 + BGE + 查询改写，不做 Cross-Encoder。
+- `rerank`：完整混合检索 + Cross-Encoder 重排。
+
+生成质量指标：
+
+- `Recall@5`
+- `MRR`
+- `Citation Accuracy`
+- `Refusal Accuracy`
+- `Faithfulness`
+- `Hallucination Rate`
+
+当前真实四路报告：
+
+| 模式 | 通过 | Recall@5 | 引用准确率 | 拒答准确率 | 忠实性 | 平均延迟 |
+|---|---:|---:|---:|---:|---:|---:|
+| BM25 | 106/120 | 97.8% | 85.6% | 96.7% | 100% | 0.6 ms |
+| BGE 向量 | 106/120 | 100% | 84.4% | 100% | 100% | 14.9 ms |
+| 混合检索 | 113/120 | 100% | 93.3% | 96.7% | 100% | 8.8 ms |
+| 混合检索 + 重排 | 120/120 | 100% | 100% | 100% | 100% | 约 1.13 秒 |
+
+一键生成报告：
+
+```powershell
+.\scripts\run-evaluation.ps1
+```
+
+报告保存到：
+
+```text
+storage/evaluation_reports/<report-id>.json
+storage/evaluation_reports/<report-id>.md
+```
+
+历史与对比接口：
+
+```text
+GET /api/evaluation/reports
+GET /api/evaluation/reports/{report_id}
+GET /api/evaluation/reports/{report_id}/markdown
+```
+
+监控接口：
+
+```text
+GET /api/metrics
+GET /metrics
+GET /api/requests/recent
+GET /api/requests/{request_id}
+POST /api/feedback
+GET /api/feedback/stats
+```
+
+每次聊天会返回 `request_id`，通过 `/api/requests/{request_id}` 可以查看 HTTP、检索、重排、模型、Token 和费用信息。
+
+CI 使用轻量依赖运行单测和 120 题核心质量门禁；完整 BGE + Cross-Encoder 四路评测由 `run-evaluation.ps1` 在本机执行。
 
 ## LLM 生成层
 
@@ -200,8 +260,13 @@ python -m app.cli status
 | `GET` | `/api/documents` | 制度列表 |
 | `GET` | `/api/documents/{id}` | 制度详情与全部条款 |
 | `POST` | `/api/chat` | 合规问答与证据检索 |
-| `POST` | `/api/evaluate` | 检索评测 |
 | `GET` | `/api/generation/status` | LLM Provider、Token、费用和降级统计 |
+| `POST` | `/api/evaluate` | 四路消融评测并保存 JSON/Markdown 报告 |
+| `GET` | `/api/evaluation/reports` | 历史报告与模式差值 |
+| `GET` | `/api/metrics` | JSON 运行指标 |
+| `GET` | `/metrics` | Prometheus 文本指标 |
+| `GET` | `/api/requests/{id}` | 按 Request ID 查看完整请求链路 |
+| `POST` | `/api/feedback` | 提交答案有帮助/需改进反馈 |
 | `POST` | `/api/documents` | 导入并持久化制度 |
 | `DELETE` | `/api/documents/{id}` | 删除用户导入文档 |
 | `GET` | `/api/index/status` | 数据库、索引版本与重建状态 |
@@ -214,7 +279,7 @@ $body = @{
   question = "发现疑似数据泄露后多久要报告？"
   scope = "current"
   department = "all"
-  mode = "hybrid"
+  mode = "rerank"
 } | ConvertTo-Json
 
 Invoke-RestMethod `
@@ -255,14 +320,18 @@ compliance-rag-fastapi/
 │   ├── schemas.py              # Pydantic 请求模型
 │   └── services/
 │       ├── chunking.py         # 长条款与表格感知切片
+│       ├── evaluation.py       # 四路评测、质量门禁、历史报告
 │       ├── generation.py       # LLM RAG 编排、引用校验与降级
 │       ├── index_manager.py    # 索引锁、版本与增量刷新
 │       ├── llm.py              # OpenAI/Qwen/Ollama Provider 与 Prompt
+│       ├── metrics.py          # JSON / Prometheus 指标
 │       ├── semantic.py         # BGE 向量与 Cross-Encoder
 │       ├── retrieval.py        # BM25、向量、回答与评测
 │       └── repository.py       # SQLite 数据源、迁移和种子同步
 ├── data/
-│   └── policies.json           # 制度、同义词与评测集
+│   ├── policies.json
+│   ├── evaluation_cases_extended.json
+│   └── evaluation_cases_phase4.json
 ├── static/
 │   ├── index.html
 │   ├── styles.css
@@ -272,12 +341,19 @@ compliance-rag-fastapi/
 ├── scripts/
 │   ├── start.ps1
 │   ├── download-models.ps1
+│   ├── run-evaluation.ps1
+│   ├── quality_gate.py
 │   └── rebuild-index.ps1
 ├── tests/
 │   ├── test_retrieval.py
 │   ├── test_repository.py
+│   ├── test_generation.py
+│   ├── test_llm.py
+│   ├── test_semantic.py
 │   └── test_api.py
 ├── .env.example
+├── .github/workflows/ci.yml
+├── requirements-ci.txt
 └── requirements.txt
 ```
 

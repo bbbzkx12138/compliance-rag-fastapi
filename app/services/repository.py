@@ -15,7 +15,7 @@ except ImportError:  # pragma: no cover - optional vector extension
     sqlite_vec = None
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 class PolicyRepository:
@@ -88,6 +88,21 @@ class PolicyRepository:
                         value TEXT NOT NULL,
                         updated_at TEXT NOT NULL
                     );
+
+                    CREATE TABLE IF NOT EXISTS answer_feedback (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        request_id TEXT NOT NULL,
+                        helpful INTEGER NOT NULL,
+                        rating INTEGER,
+                        comment TEXT,
+                        question TEXT,
+                        answer_mode TEXT,
+                        model TEXT,
+                        created_at TEXT NOT NULL
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_feedback_request
+                    ON answer_feedback(request_id);
 
                     CREATE INDEX IF NOT EXISTS idx_sections_document
                     ON sections(document_id, position);
@@ -603,6 +618,9 @@ class PolicyRepository:
             embedding_count = connection.execute(
                 "SELECT COUNT(*) AS count FROM embeddings"
             ).fetchone()["count"]
+            feedback_count = connection.execute(
+                "SELECT COUNT(*) AS count FROM answer_feedback"
+            ).fetchone()["count"]
             return {
                 "schema_version": self.schema_version(),
                 "document_count": int(row["document_count"] or 0),
@@ -610,7 +628,56 @@ class PolicyRepository:
                 "uploaded_count": int(row["uploaded_count"] or 0),
                 "section_count": int(section_count or 0),
                 "embedding_count": int(embedding_count or 0),
+                "feedback_count": int(feedback_count or 0),
                 "last_seeded_at": row["last_seeded_at"],
+            }
+
+    def save_feedback(self, feedback: dict[str, Any]) -> int:
+        with closing(self._connect()) as connection:
+            with connection:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO answer_feedback (
+                        request_id, helpful, rating, comment, question,
+                        answer_mode, model, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        feedback["request_id"],
+                        1 if feedback["helpful"] else 0,
+                        feedback.get("rating"),
+                        feedback.get("comment"),
+                        feedback.get("question"),
+                        feedback.get("answer_mode"),
+                        feedback.get("model"),
+                        self._now(),
+                    ),
+                )
+                return int(cursor.lastrowid)
+
+    def feedback_stats(self) -> dict[str, Any]:
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                """
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(helpful) AS helpful_count,
+                    AVG(rating) AS average_rating
+                FROM answer_feedback
+                """
+            ).fetchone()
+            total = int(row["total"] or 0)
+            helpful = int(row["helpful_count"] or 0)
+            return {
+                "total": total,
+                "helpful_count": helpful,
+                "unhelpful_count": total - helpful,
+                "helpful_rate": helpful / total if total else 0.0,
+                "average_rating": (
+                    round(float(row["average_rating"]), 3)
+                    if row["average_rating"] is not None
+                    else None
+                ),
             }
 
     def _hydrate_document(

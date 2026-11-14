@@ -23,7 +23,11 @@ class ApiIntegrationTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.temp_dir = tempfile.TemporaryDirectory()
         database_path = Path(cls.temp_dir.name) / "test-policy-rag.sqlite3"
-        cls.app = create_app(database_path=database_path)
+        cls.reports_dir = Path(cls.temp_dir.name) / "evaluation_reports"
+        cls.app = create_app(
+            database_path=database_path,
+            evaluation_reports_dir=cls.reports_dir,
+        )
         config = uvicorn.Config(
             cls.app,
             host="127.0.0.1",
@@ -53,7 +57,8 @@ class ApiIntegrationTests(unittest.TestCase):
         method: str,
         path: str,
         payload: dict | None = None,
-    ) -> tuple[int, dict | str]:
+        include_headers: bool = False,
+    ):
         data = (
             json.dumps(payload, ensure_ascii=False).encode("utf-8")
             if payload is not None
@@ -77,7 +82,12 @@ class ApiIntegrationTests(unittest.TestCase):
                 body = response.read().decode("utf-8")
                 content_type = response.headers.get("Content-Type", "")
                 if "application/json" in content_type:
-                    return response.status, json.loads(body)
+                    parsed = json.loads(body)
+                    if include_headers:
+                        return response.status, parsed, response.headers
+                    return response.status, parsed
+                if include_headers:
+                    return response.status, body, response.headers
                 return response.status, body
         except urllib.error.HTTPError as error:
             with error:
@@ -86,6 +96,8 @@ class ApiIntegrationTests(unittest.TestCase):
                     parsed = json.loads(body)
                 except json.JSONDecodeError:
                     parsed = body
+                if include_headers:
+                    return error.code, parsed, error.headers
                 return error.code, parsed
 
     def test_static_page(self) -> None:
@@ -97,7 +109,7 @@ class ApiIntegrationTests(unittest.TestCase):
         status, body = self.request("GET", "/api/health")
         self.assertEqual(status, 200)
         self.assertEqual(body["status"], "healthy")
-        self.assertEqual(body["schema_version"], 3)
+        self.assertEqual(body["schema_version"], 4)
         self.assertEqual(body["meta"]["document_count"], 9)
         self.assertEqual(body["meta"]["chunk_count"], 36)
         self.assertEqual(body["database"]["builtin_count"], 9)
@@ -132,19 +144,30 @@ class ApiIntegrationTests(unittest.TestCase):
         self.assertTrue(refusal["answer"]["refused"])
 
     def test_validation_error(self) -> None:
-        status, body = self.request(
-            "POST", "/api/chat", {"question": "", "mode": "invalid"}
+        status, body, headers = self.request(
+            "POST",
+            "/api/chat",
+            {"question": "", "mode": "invalid"},
+            include_headers=True,
         )
         self.assertEqual(status, 422)
         self.assertFalse(body["ok"])
+        request_id = headers.get("X-Request-Id")
+        self.assertTrue(request_id)
+        status, trace = self.request(
+            "GET", f"/api/requests/{request_id}"
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(trace["request"]["status"], 422)
+        self.assertIn("ValidationError", trace["request"]["error"])
 
     def test_evaluation(self) -> None:
         status, body = self.request(
             "POST", "/api/evaluate", {"modes": ["hybrid"]}
         )
         self.assertEqual(status, 200)
-        self.assertEqual(body["case_count"], 54)
-        self.assertGreaterEqual(body["results"]["hybrid"]["passed"], 50)
+        self.assertEqual(body["case_count"], 120)
+        self.assertGreaterEqual(body["results"]["hybrid"]["passed"], 100)
 
     def test_import_query_and_delete_persistent_document(self) -> None:
         status, imported = self.request(
@@ -217,6 +240,68 @@ class ApiIntegrationTests(unittest.TestCase):
         status, body = self.request("GET", "/api/models/status")
         self.assertEqual(status, 200)
         self.assertFalse(body["enabled"])
+
+    def test_metrics_and_prometheus_endpoints(self) -> None:
+        status, body = self.request("GET", "/api/metrics")
+        self.assertEqual(status, 200)
+        self.assertIn("http", body)
+        self.assertIn("generation_service", body)
+
+        status, text = self.request("GET", "/metrics")
+        self.assertEqual(status, 200)
+        self.assertIn("policylens_active_requests", text)
+
+    def test_request_trace_and_feedback(self) -> None:
+        status, chat = self.request(
+            "POST",
+            "/api/chat",
+            {
+                "question": "客户送2000元购物卡可以收吗？",
+                "scope": "current",
+                "mode": "hybrid",
+            },
+        )
+        self.assertEqual(status, 200)
+        request_id = chat["request_id"]
+        status, trace = self.request("GET", f"/api/requests/{request_id}")
+        self.assertEqual(status, 200)
+        self.assertEqual(trace["request"]["request_id"], request_id)
+        self.assertIsNotNone(trace["request"]["operation"])
+
+        status, feedback = self.request(
+            "POST",
+            "/api/feedback",
+            {
+                "request_id": request_id,
+                "helpful": True,
+                "rating": 5,
+                "comment": "答案和引用清楚",
+            },
+        )
+        self.assertEqual(status, 201)
+        self.assertGreaterEqual(feedback["stats"]["total"], 1)
+
+    def test_evaluation_report_is_saved_and_listed(self) -> None:
+        status, report = self.request(
+            "POST",
+            "/api/evaluate",
+            {"modes": ["keyword", "hybrid"], "save_report": True},
+        )
+        self.assertEqual(status, 200)
+        self.assertIn("report_id", report)
+        self.assertTrue(Path(report["report_files"]["json"]).exists())
+        self.assertTrue(Path(report["report_files"]["markdown"]).exists())
+
+        status, listing = self.request("GET", "/api/evaluation/reports")
+        self.assertEqual(status, 200)
+        self.assertGreaterEqual(len(listing["reports"]), 1)
+
+        status, markdown = self.request(
+            "GET",
+            f"/api/evaluation/reports/{report['report_id']}/markdown",
+        )
+        self.assertEqual(status, 200)
+        self.assertIn("# PolicyLens RAG Evaluation Report", markdown)
 
 
 if __name__ == "__main__":
